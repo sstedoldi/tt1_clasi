@@ -1,0 +1,7 @@
+models/
+0-old/
+venv/
+venv_p38/
+__pycache__/
+
+good_desc_embs_labels.npz

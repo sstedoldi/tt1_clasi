@@ -1,0 +1,186 @@
+03-08-2024 - trying fine-tuning with extra tokens
+
+Finding overfitting beyond 5 epochs
+
+Training on cuda
+Epoch 1/30
+----------
+Train loss 5.996995013652716 accuracy 0.09093723300189453 top3_accuracy 0.15559462928796378
+Validation loss 5.298853078480975 accuracy 0.1410486220031369 top3_accuracy 0.23250429457016955
+Epoch 1 completed in 14.52 minutes.
+
+Epoch 2/30
+----------
+Train loss 5.086813778021703 accuracy 0.15152490744065678 top3_accuracy 0.25138168294968155
+Validation loss 4.859426907456192 accuracy 0.1833594741952349 top3_accuracy 0.3008066323101053
+Epoch 2 completed in 15.35 minutes.
+
+Epoch 3/30
+----------
+Train loss 4.684652594690916 accuracy 0.1866665015663889 top3_accuracy 0.30271135931186205
+Validation loss 4.554620811161602 accuracy 0.21689446560609454 top3_accuracy 0.3414370005228172
+Epoch 3 completed in 15.42 minutes.
+
+Epoch 4/30
+----------
+Train loss 4.410120460400295 accuracy 0.21495230665725595 top3_accuracy 0.340684423201542
+Validation loss 4.352191584511897 accuracy 0.2516991560236015 top3_accuracy 0.3816565837627903
+Epoch 4 completed in 15.35 minutes.
+
+Epoch 5/30
+----------
+Train loss 4.195801060509746 accuracy 0.23940365779665423 top3_accuracy 0.37369622374389644
+Validation loss 4.224232257694326 accuracy 0.2715662110687878 top3_accuracy 0.4092538651131526
+Epoch 5 completed in 15.67 minutes.
+
+Epoch 6/30
+----------
+Train loss 4.0260943480985825 accuracy 0.25924045617206753 top3_accuracy 0.39891941868192193
+Validation loss 4.103904332738623 accuracy 0.28777354544775563 top3_accuracy 0.4286727910971693
+Epoch 6 completed in 15.94 minutes.
+
+Epoch 7/30
+----------
+Train loss 3.880117549934342 accuracy 0.27671632057520934 top3_accuracy 0.4203287972032013
+Validation loss 4.014342041781869 accuracy 0.3032339980581074 top3_accuracy 0.44316229740832025
+Epoch 7 completed in 15.77 minutes.
+
+Epoch 8/30
+----------
+Train loss 3.7580922313168856 accuracy 0.29317681826999675 top3_accuracy 0.43942677183554363
+Validation loss 3.9238263162091074 accuracy 0.31641646127418027 top3_accuracy 0.45933228769885726
+Epoch 8 completed in 14.54 minutes.
+
+Epoch 9/30
+----------
+Train loss 3.644286256292132 accuracy 0.3068718863119487 top3_accuracy 0.4561184099192247
+Validation loss 3.8546752184095348 accuracy 0.3308312794084696 top3_accuracy 0.474419299424901
+Epoch 9 completed in 13.76 minutes.
+
+Epoch 10/30
+----------
+Train loss 3.5382221156568514 accuracy 0.32048440421501007 top3_accuracy 0.47129112544731855
+Validation loss 3.7933740872920914 accuracy 0.34016730151617 top3_accuracy 0.48341922473672416
+Epoch 10 completed in 14.00 minutes.
+
+Epoch 11/30
+----------
+Train loss 3.445328461583048 accuracy 0.3319630010277492 top3_accuracy 0.4856053195309501
+Validation loss 3.7527215534925746 accuracy 0.3480095600866383 top3_accuracy 0.4935768167899022
+Epoch 11 completed in 13.74 minutes.
+
+Epoch 12/30
+----------
+Train loss 3.356259551544545 accuracy 0.34386260354883047 top3_accuracy 0.49854918130899756
+Validation loss 3.7063217277737643 accuracy 0.3560385390992606 top3_accuracy 0.5048547314960041
+Epoch 12 completed in 14.19 minutes.
+
+Epoch 13/30
+----------
+Train loss 3.278171851244044 accuracy 0.3519772822017773 top3_accuracy 0.5094457996425579
+Validation loss 3.6451272805674244 accuracy 0.3645903353499141 top3_accuracy 0.5085517962506535
+Epoch 13 completed in 13.92 minutes.
+
+Epoch 14/30
+----------
+Train loss 3.204900153001454 accuracy 0.3612146427436364 top3_accuracy 0.5196613793302707
+Validation loss 3.6358596133502155 accuracy 0.3696691313765031 top3_accuracy 0.5146762267533049
+Epoch 14 completed in 13.52 minutes.
+
+Epoch 15/30
+----------
+Train loss 3.1378445755984314 accuracy 0.3701218027299331 top3_accuracy 0.5287625321429603
+Validation loss 3.6065616578468997 accuracy 0.37553215326013895 top3_accuracy 0.5237881843304205
+Epoch 15 completed in 13.74 minutes.
+
+Epoch 16/30
+----------
+Train loss 3.0749610762359016 accuracy 0.3773243023481387 top3_accuracy 0.5384663009695514
+Validation loss 3.5980990383787392 accuracy 0.3784823362461722 top3_accuracy 0.5279333781462394
+Epoch 16 completed in 13.94 minutes.
+
+Epoch 17/30
+----------
+Train loss 3.020167220074159 accuracy 0.38517069304969104 top3_accuracy 0.5468575225877818
+Validation loss 3.585812865548379 accuracy 0.3850175517215625 top3_accuracy 0.5318918515199044
+Epoch 17 completed in 13.64 minutes.
+
+Epoch 18/30
+----------
+Train loss 2.964655745433295 accuracy 0.39186550931371944 top3_accuracy 0.5554427370324051
+Validation loss 3.516300276402504 accuracy 0.3870341324968258 top3_accuracy 0.5355142280976921
+Epoch 18 completed in 13.72 minutes.
+
+Epoch 19/30
+----------
+Train loss 2.911000460549625 accuracy 0.39908864646664766 top3_accuracy 0.5632767452131239
+Validation loss 3.507927648696421 accuracy 0.3907311972514751 top3_accuracy 0.5393233251176339
+Epoch 19 completed in 14.20 minutes.
+
+Epoch 20/30
+----------
+Train loss 2.8636964184521667 accuracy 0.40474333098065435 top3_accuracy 0.5694226030535297
+Validation loss 3.559743182775937 accuracy 0.39655687504668014 top3_accuracy 0.5407797445664352
+Epoch 20 completed in 13.52 minutes.
+
+Epoch 21/30
+----------
+Train loss 2.816570067460019 accuracy 0.4116486500988538 top3_accuracy 0.5774960066370312
+Validation loss 3.510737430664801 accuracy 0.4020464560460079 top3_accuracy 0.5450743147359773
+Epoch 21 completed in 13.48 minutes.
+
+Epoch 22/30
+----------
+Train loss 2.7719264089498323 accuracy 0.41821551364760173 top3_accuracy 0.5840463601580009
+Validation loss 3.5037828319958604 accuracy 0.40331615505265517 top3_accuracy 0.5498917021435507
+Epoch 22 completed in 13.87 minutes.
+
+Epoch 23/30
+----------
+Train loss 2.7330728425206874 accuracy 0.4235730176616022 top3_accuracy 0.5905017810192466
+Validation loss 3.4998991339864696 accuracy 0.4058928971543805 top3_accuracy 0.5508626484427516
+Epoch 23 completed in 14.11 minutes.
+
+Epoch 24/30
+----------
+Train loss 2.6915847784673206 accuracy 0.4291451520367183 top3_accuracy 0.5967178064777094
+Validation loss 3.4384963925451646 accuracy 0.40645305848084246 top3_accuracy 0.5551572186122937
+Epoch 24 completed in 14.00 minutes.
+
+Epoch 25/30
+----------
+Train loss 2.6497117008029614 accuracy 0.4362733565299224 top3_accuracy 0.6031360797764542
+Validation loss 3.4413901943459733 accuracy 0.4083949510792442 top3_accuracy 0.5546344013742625
+Epoch 25 completed in 14.07 minutes.
+
+Epoch 26/30
+----------
+Train loss 2.6145578555274196 accuracy 0.4405246886827887 top3_accuracy 0.6092447900543593
+Validation loss 3.4735208695649815 accuracy 0.4096273059974606 top3_accuracy 0.5570617671222645
+Epoch 26 completed in 13.76 minutes.
+
+Epoch 27/30
+----------
+Train loss 2.578153776254977 accuracy 0.44615873566207276 top3_accuracy 0.6144660863391903
+Validation loss 3.4180833188863637 accuracy 0.4141085966091568 top3_accuracy 0.5607588318769139
+Epoch 27 completed in 13.94 minutes.
+
+Epoch 28/30
+----------
+Train loss 2.5456706115082106 accuracy 0.4492089632940807 top3_accuracy 0.6196337250337424
+Validation loss 3.4768956697400184 accuracy 0.41351109119426394 top3_accuracy 0.562999477182762
+Epoch 28 completed in 13.96 minutes.
+
+Epoch 29/30
+----------
+Train loss 2.50841594067494 accuracy 0.45626287266228327 top3_accuracy 0.6264069639297168
+Validation loss 3.496689206667983 accuracy 0.41672268279931285 top3_accuracy 0.5629621330943312
+Epoch 29 completed in 13.48 minutes.
+
+Epoch 30/30
+----------
+Train loss 2.479658533943807 accuracy 0.4597712535651341 top3_accuracy 0.6304808132839683
+Validation loss 3.4683853175620167 accuracy 0.4164986182687281 top3_accuracy 0.5668459182911345
+Epoch 30 completed in 13.65 minutes.
+
+Training complete.
