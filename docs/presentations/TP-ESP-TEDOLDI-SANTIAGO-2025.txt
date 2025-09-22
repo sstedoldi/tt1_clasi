@@ -1,0 +1,261 @@
+
+Clasificación Arancelaria con NLP
+
+Trabajo de Especialización
+Data Mining – UBA – 2025
+
+
+Alumno
+Santiago Sebastian Tedoldi
+DNI 36386675
+
+
+Tabla de Contenido
+Tabla de Contenido	2
+Contexto	3
+Objetivo	4
+Descripción del Conjunto de Datos	4
+Contenido y Origen:	4
+Características:	4
+Preguntas y Retos del Proyecto	4
+Técnicas y Enfoques Propuestos	4
+Metodología	5
+EDA	5
+Ingeniería de variables	5
+Técnicas no-supervisadas	5
+Definición del target/ variable objetivo	5
+Técnicas supervisadas y transferencia del aprendizaje	6
+Perfilado y análisis de los datos	6
+Quick EDA	6
+Nomenclatura HS06 en inglés	8
+EDA detallado	8
+Embeddings con DistilBERT y PCA	10
+Medición de similitud del coseno	12
+Entrenamiento del clasificador	15
+Arquitectura encoder-classifier	15
+Encoder — DistilBertModel	15
+Entrenamiento	16
+Rendimiento	17
+Visualización del DistilBERT ajustado	18
+Análisis del error	19
+Discusión	20
+Rendimiento y nivel de detalle	20
+Modelo adaptado al español	20
+Transfer learning extendido (20 epochs o más)	20
+Necesidad de un dataset más extenso	20
+Metamodelo para evaluar la calidad de clasificación	20
+Soluciones híbridas combinando ML y LLMs	21
+Conclusiones	21
+Bibliografía	21
+
+Contexto
+El comercio internacional de mercaderías a nivel mundial alcanzó un récord de 33 billones de dólares en 2024, con un crecimiento del 3,7 % (1,2 billones de dólares) (UNCTAD, 2025). Al mismo tiempo, los productos y mercaderías comercializados se diversifican mediante invenciones de múltiples rubros (alimentos, químicos, medicamentos, dispositivos tecnológicos, etc.).
+Este contexto del comercio global resalta la importancia de estándares para categorizar y clasificar las mercaderías. El Sistema Armonizado de Descripción y Codificación de Mercaderías, Sistema Armonizado (SA o HS por sus siglas en inglés) es el estándar adoptado por más de 190 países, cubriendo el 98 % del comercio global (Commission, 2025).
+El HS cubre todos los bienes comerciables, mercaderías desde animales vivos a dispositivos electrónicos y obras de arte, clasificados con un total de 5612 códigos a 6 dígitos (subpartidas o subheadings HS06) y 1244 códigos a 4 dígitos (partidas o headings HS04), en su versión 2022 (Wikipedia, 2025).
+En Argentina (como en muchos otros países que aplican el HS), los operadores del comercio internacional, como despachantes, importadores, exportadores, transportistas, entre otros, tienen la responsabilidad de clasificar correctamente sus productos frente a autoridades gubernamentales.
+Para lograr una correcta clasificación usando el HS, el propio sistema define reglas generales e interpretativas, textos y notas legales y notas explicativas a nivel de HS04 y HS06. A su vez, distintas regiones o bloques económicos amplían el HS a códigos regionales, y los países (individualmente) también hacen los suyo.
+En Argentina, para declarar una importación o exportación a consumo, se usan códigos del Sistema Informático Malvinas (SIM) de 11 dígitos (6 dígitos del HS06, 2 de la Nomenclatura Común del Mercosur y 3 dígitos nacionales) y una letra de control. Por ejemplo, el código SIM de teléfonos inteligentes (VUCE, 2025):
+Código ArgentinoSIMCódigo MERCOSURNCMSubheadings HSHS06Headings HSHS04Chapter HSHS02Teléfonos inteligentes85171300000 CA nivel local, los códigos SIM suman un total de cerca de ~30 mil, que refieren a mercaderías más o menos específicas, que pueden crearse por necesidades regulatorias o estadísticas. A nivel regional (códigos NCM) tenemos ~9 mil códigos. Sin más, resulta evidente que encontrar los códigos correctos no es tarea simple.
+Una incorrecta clasificación arancelaria, en el ámbito del control aduanero de cualquier país, puede implicar errores graves en el tratamiento arancelario y en las certificaciones e intervención de terceros organismos y otras agencias de los estados. En la Argentina, este error se define como declaración inexacta y se penaliza con multa de 1 a 5 veces del perjuicio fiscal o, si se trata de una mercadería prohibida, del valor de la mercadería (Art. 954, Código Aduanero).
+Objetivo
+El tema elegido aborda a la clasificación arancelaria/tarifario de mercaderías, partiendo de descripciones comerciales y según la nomenclatura del Sistema Armonizado (SA o HS por sus siglas en inglés) internacional. La finalidad es entrenar y evaluar un modelo de clasificación de texto, considerando los desafíos propios de un dataset presuntamente acotado -para la cantidad de clases objetivo- y fuertemente desbalanceado.
+Descripción del Conjunto de Datos
+ Contenido y Origen:
+El dataset está formado por tuplas con información de mercaderías sometidas al comercio internacional (descripción_comercial, código_tarifario) en idioma inglés, en un total de 500 mil ítems. El origen de estos datos no es preciso. Fue material de una capacitación internacional en Corea del Sur, en el marco del Programa de becas BACUDA de la Organización Mundial de Aduanas.
+ Características:
+* Muestra Variada: El conjunto de datos presenta una diversidad considerable en cuanto a tipos de productos y mercaderías, clasificadas en 1244 códigos a 4 dígitos y 5612 códigos a 6 dígitos.
+* Desbalanceo: Predominan las descripciones de productos relacionados con máquinas y material eléctrico/electrónico, como también de vehículos automotores.
+Preguntas y Retos del Proyecto
+Con estos datos y la problemática planteada surge la siguiente pregunta:
+¿Es posible entrenar un modelo de clasificación arancelaria basado en descripciones comerciales, incluso con una muestra acotada?
+Técnicas y Enfoques Propuestos
+En la literatura, los enfoques que se han usado son muy variados, con diversos enfoques en el preprocesamiento del texto, como TF-IDP, LDA y N-gramas (Harsani, 2020), métodos no supervisados, con embeddings y medidas de similitud como GloVe (Xie, 2022), y supervisados con encoders de texto basados en redes neuronales y transformers (Xie, 2022) (Lee E. K., 2021).
+A su vez, trabajos más actuales incluyen el uso de grandes modelos de lenguaje (LLMs por sus siglas en inglés) preentrenados, tanto para compararlos con modelos de Machine Learning (Ignacio Marra de Artiñano, 2023) como para integrarse con ellos en pos de una clasificación asistida por Inteligencia Artificial (Lee E. K., 2023).
+En este trabajo, para enfrentar los desafíos planteados se propone el uso de:
+* Encoders de texto y Clasificación: Se propone el uso de redes neuronales usando modelos “tradicionales”, como Doc2Vec (Lau, 2016) o FastText (Bojanowski, 2017), y con arquitectura transformer pre-entrenados BERT (Devlin, 2019) o DistilBERT (Sanh, 2020).
+* PCA y Clústering: Cómo método analítico y exploratorio, para reducir la dimensionalidad del conjunto de datos, facilitar el manejo de las características extraídas e identificar patrones de los textos.
+Metodología
+ EDA
+En la problemática a trabajar sobre clasificación arancelaria/tarifaria de mercaderías del comercio internacional, el dataset disponible es particularmente sencillo, partiendo de solo dos variables:
+* HS06_code: código tarifario armonizado a 6 dígitos (Categórica).
+* goods_desc: texto libre para describir comercialmente la mercadería (Texto).
+Por esta razón, para la etapa exploratoria, además de evaluar temas de calidad (nulos, duplicados, outliers) y distribución/frecuencias, corresponde trabajar con técnicas de ingeniería de variables. En términos generales, el análisis exploratorio busca entender cómo se compone el dataset, que mercaderías abarca, que información contiene y que limitaciones tenemos que considerar.
+ Ingeniería de variables
+Para mejorar el análisis del dataset, y contemplar toda la información “escondida” en el mismo, se procede a:
+* Desagregar la variable HS06 en otros códigos subyacentes.
+* Buscar fuentes externas que complementan a los datos disponibles.
+* Aplicar técnicas de encoding de texto, buscando representaciones latentes.
+* Reducir dimensiones (PCA, UMAP y/o t-SNE).
+
+ Técnicas no-supervisadas
+Las técnicas que no requieren el uso del resultado o variable target pueden presentar una solución simplificada a problemáticas de clasificación. Sin embargo, en la literatura, los estudios donde estas técnicas son relativamente eficientes (Xie, 2022) se limitan a un número acotados de mercaderías (10 clases), mientras que en este trabajo se busca una solución holística de todo el universo posible.
+El EDA detallado, descripto más adelante, motivó la desestimación de técnicas no supervisadas, previendo un desempeño pobre incluso para agrupar descripciones en códigos HS02 (97 clases). En un futuro trabajo, esto debe ser reevaluado para lograr mayor precisión respecto al desempeño alcanzable con estas técnicas. 
+ Definición del target/ variable objetivo
+En el contexto planteado, la desagregación del código tarifario HS06, en códigos regionales o nacionales, tiene fundamento de negocio y permite considerar futuros cambios en la variable objetivo. Ampliando lo antes mencionado, la clasificación de mercaderías usando el HS, a nivel internacional, se compone de:
+* Secciones: No se reflejan en el código tarifario, pero tienen un papel normativo relevante. Ejemplo: Sección XVI refiere a las máquinas, aparatos y equipamiento eléctrico/electrónico y comprende los capítulos 84 y 85.
+* Capítulos (HS02): Primeros dos dígitos del código y agrupa mercaderías según su tipo o naturaleza. Ejemplo: Capítulo 84 contiene los reactores nucleares, calderas, maquinaria y aparatos mecánicos.
+* Partidas (HS04): Primeros cuatro dígitos del código y define a mercaderías relevantes para el comercio internacional. Ejemplo: Partida 8471 define a las máquinas automáticas para tratamiento o procesamiento de datos (computadoras).
+* Subpartidas (HS06): Códigos tarifarios a 6 dígitos, con una “apertura” de la partida, permitiendo definir mercaderías más específicas. Ejemplo: 847130 define a Máquinas automáticas para tratamiento o procesamiento de datos, portátiles, de peso inferior o igual a 10 kg, que estén constituidas, al menos, por una unidad central de proceso, un teclado y un visualizador.
+Lo descripto, permitiría ejercitar la clasificación a 2, 4 o 6 dígitos. A menor cantidad de dígitos, menos cantidad de clases, lo que también simplifica la tarea del algoritmo. Sin embargo, en el comercio internacional, una clasificación debe tener tantos dígitos como sea necesario. En este trabajo, los modelos clasifican en códigos HS04.
+ Técnicas supervisadas y transferencia del aprendizaje
+Incluso las ya técnicas consideradas “tradicionales” para la explotación de texto (Doc2Vec o FastText) utilizan redes neuronales para generar embeddings que luego se clasifican usando medidas de similitud. Estos modelos deben entrenarse desde cero, con el corpus disponible para resolver la problemática.
+Por otro lado, es posible partir de modelos con arquitectura transformer (BERT, DistiltBERT, o similar), pre-entrenados con corpus de texto extensos. Esto puede usarse como encoder (codificador o cuerpo) del modelo, mientras que se desarrolla y entrena un classifier (clasificador o cabeza) que se encarga de la clasificación final.
+La arquitectura encoder-classifier se utiliza mediante:
+* Transfer learning (transferencia del aprendizaje), ajustando durante el entrenamiento solo al classifier.
+* Fine-tuning (ajuste fino) total o parcial, ajustando el conjunto cabeza y encoder (en todos sus capas -total- o en algunas de sus capas de salidad -parcial-).
+Perfilado y análisis de los datos
+ Quick EDA
+En una revisión rápida del dataset crudo, se analizan nulos, duplicados y frecuencias respecto a códigos de capítulo (HS02), partida (HS04) y subpartida (HS06):
+Valores nulos por columna:
+ColumnaValores nulosHS060GOODS_DESCRIPTION0HS040HS020Frecuencias por HS02, TOP10:
+HS02CantidadFrecuencia relativaFrecuencia acumulada8454.90120,5%20,5%8533.57112,54%33,04%8728.47610,63%43,67%7316.1736,04%49,71%3912.2184,56%54,28%9011.6114,34%58,61%827.9722,98%61,59%947.9212,96%64,55%407.5262,81%67,36%834.2851,60%68,96%Frecuencias por HS02, BOTTOM10:
+HS02CantidadFrecuencia relativaFrecuencia acumulada41220,01%99,96%81190,01%99,97%45190,01%99,97%05150,01%99,98%80150,01%99,98%50110,00%99,99%14110,00%99,99%78100,00%100,0%5160,00%100,0%4350,00%100,0%Frecuencias por HS04, TOP10:
+HS04CantidadFrecuencia relativaFrecuencia acumulada87088.5243,18%3,18%87037.3412,74%5,92%73185.7002,13%8,05%85365.4872,05%10,10%84824.8951,83%11,93%84214.5931,72%13,65%84313.9101,46%15,11%84833.8191,43%16,53%84813.5621,33%17,86%87143.4851,30%19,16%Frecuencias por HS06, TOP10:
+HS06CantidadFrecuencia relativaFrecuencia acumulada8703233.8691,44%1,44%8482802.9241,09%2,54%8711202.7791,04%3,57%7318152.6320,98%4,56%8703222.2470,84%5,40%8708992.0740,77%6,17%9503001.9880,74%6,91%9405401.8740,70%7,61%8481801.8570,69%8,31%9018901.8360,69%8,99%Respecto a las frecuencias por HS04 y HS06, BOTTOM10, los mínimos están en 1 única muestra por código.
+ Nomenclatura HS06 en inglés
+Como desarrollo del dataset original, se trabajó con la nomenclatura de los códigos de HS06 que consiste en descripciones genéricas para cada código y que, además puede separarse en capítulos, partidas y subpartidas.
+Primeros 5 códigos HS06:
+HS06full_engHS04HS02010120Live horses, asses, mules and hinnies. && - Horses :010101010121Live horses, asses, mules and hinnies. && - Horses : && -- Pure-bred breeding animals010101010129Live horses, asses, mules and hinnies. && - Horses : && -- Other010101010130Live horses, asses, mules and hinnies. && - Asses010101010190Live horses, asses, mules and hinnies. && - Other010101Últimos 5 códigos HS06:
+HS06full_engHS04HS02961590Combs, hair-slides and the like; hairpins, curling pins, curling grips, hair-curlers and the like, other than those of heading 85.16, and parts thereof. && - Other961596961610Scent sprays and similar toilet sprays, and mounts and heads therefor; powder-puffs and pads for the application of cosmetics or toilet preparations. && - Scent sprays and similar toilet sprays, and mounts and heads therefor961696961620Scent sprays and similar toilet sprays, and mounts and heads therefor; powder-puffs and pads for the application of cosmetics or toilet preparations. && - Powder-puffs and pads for the application of cosmetics or toilet preparations961696970110Paintings, drawings and pastels, executed entirely by hand, other than drawings of heading 49.06 and other than hand- painted or hand-decorated manufactured articles; collages and similar decorative plaques. && - Paintings, drawings and pastels970197970190Paintings, drawings and pastels, executed entirely by hand, other than drawings of heading 49.06 and other than hand- painted or hand-decorated manufactured articles; collages and similar decorative plaques. && - Other970197IMPORTANTE: Encontramos que 4.5 % de los datos no encuentran su descripción de nomenclatura, lo que puede deberse a que se están utilizando una nomenclatura diferente a la usada en el registro de los datos.
+ EDA detallado
+Para analizar la composición de las descripciones, desde parámetros estadísticos, se procedió a generar las siguientes variables:
+['GOODS_DESCRIPTION_len_words', 
+'GOODS_DESCRIPTION_len_chars',
+'subtokenization_indicator']
+Para cada descripción, se evalúan el largo en cantidad de palabras y de caracteres y un indicador de tokenización, que mide como se tokeniza la descripción en relación a la cantidad de palabras.
+El tokenizer utilizado es un algoritmo de Hugging Face Transformers, llamado "distilbert-base-uncased". Este algoritmo corresponde al modelo pre-entrenado que se utiliza luego para procesar los textos en estudio:
+https://huggingface.co/distilbert/distilbert-base-uncased
+Luego, se procesaron las variables en agregaciones estadísticas, para agrupaciones en HS06, HS04 y HS02, según el siguiente diccionario:
+{'HS06': ['count'],
+ 'GOODS_DESCRIPTION_len_words': ['sum', 'min', 'mean', 'median', 'max', 'std'],
+ 'GOODS_DESCRIPTION_len_chars': ['sum', 'min', 'mean', 'median', 'max', 'std'],
+ 'subtokenization_indicator': ['sum', 'min', 'mean', 'median', 'max', 'std']}
+A continuación, se muestran algunas distribuciones, con datos básicos de las variables:
+ 
+El desbalance en las clases/códigos se cuantifica razonablemente en variables como: HS06_count, GOODS_DESCRIPTION_len_words_sum y GOODS_DESCRIPTION_len_chars_sum, con valores medios lejos de la mediana y distribuciones de colas largas.
+ 
+A su vez, surgen distribuciones más acampanadas para variables como el largo promedio (tanto para palabras como para caracteres), cuando se agrupa en los distintos códigos HS06, HS04 y HS02.
+ 
+Finalmente, la desviación estándar del largo de las descripciones tiene una distribución parecida a un Xi cuadrado, tanto para el largo en palabras como en caracteres. Se destaca que hay códigos con una única muestra, resultado en NULLs al calcular la desviación.
+En términos de correlaciones, no hay grandes sorpresas, ya que se correlacionan variables que agregan cantidades como: HS06_count, GOODS_DESCRIPTION_len_words_sum, GOODS_DESCRIPTION_len_chars_sum, GOODS_DESCRIPTION_len_words_max, GOODS_DESCRIPTION_len_chars_max. 
+ 
+ Embeddings con DistilBERT y PCA
+Para evaluar las descripciones se procede a utilizar un modelo pre-entrenado, disponible en Hugging Face, llamado "distilbert-base-uncased": https://huggingface.co/distilbert/distilbert-base-uncased
+Los tokens generados se procesan y se obtienen embeddings de 768 dimensiones, uno para cada caso. A su vez, a modo de referencia, se procesan los textos de la nomenclatura de los códigos HS06.
+Para la visualización de estos embeddings se utiliza PCA, en 2 y 3 dimensiones. A continuación, se observan los resultados, según HS06 descripciones de mercaderías - muestra de un 5 % (13,389 casos):
+
+En amarillo, se observa un marcado cluster que consiste en las descripciones del capítulo HS02 87 (vehículos y material automotor); y
+HS06 full eng (nomenclatura):
+
+En este caso, en rosa y verde claro se observan un cluster que corresponde a la nomenclatura de los capítulos HS02 28 y 29 (químicos inorgánicos y orgánicos).
+ Medición de similitud del coseno
+Cómo último ejercicio exploratorio, se procede a medir la similitud, para cada caso, entre GOODS_DESCRIPTION y full_eng (descripción de nomenclatura), para evaluar cuando distan los embeddings de estos textos. En una agregación por HS06 se observan valores medios y medianos altos y coincidentes, del orden de 0.84:
+ 
+ 
+En términos de similitud mínima por código HS06, la similitud también es relativamente alta, con una media de 0.79. 
+ 
+En términos de similitud máxima por código HS06, el valor medio ronda el 0.89, aunque se muestran valores muy próximos a la unidad.
+ 
+Lo antes descripto, motiva a observar los casos de similitud media, mínima y máxima.
+Casos de similitud media o regular:
+HS06Descripción de la mercaderíaDescripción completa del HS06Similitud de coseno853950ASSY LED Base Strobe UpgradeElectric filament or discharge lamps, including sealed beam lamp units and ultra-violet or infra-red lamps – Light-emitting diode (LED) lamps0.827174220870VODKA FRAISE JELZIN STRAWBERRYUndenatured ethyl alcohol of an alcoholic strength by volume of less than 80 % vol; spirits, liqueurs and other spirituous beverages – Liqueurs and cordials0.831804620590SHORT SLEEVE REPAIR SHIRTMen's or boys' shirts – Of other textile materials0.830535732620HANGER RODOther articles of iron or steel – Articles of iron or steel wire0.8308908431438-3/8SH Extension Overshot C-17208Parts suitable for use solely or principally with the machinery of headings 84.25 to 84.30 – Parts for boring or sinking machinery0.828724870323SUZUKI ESCUDO 2006Motor cars and other motor vehicles principally designed for the transport of persons – Of a cylinder capacity exceeding 1 500 cm³ but not exceeding 3 000 cm³0.817948841899Spare Parts for 10 TR Air Cooled Water ChillerRefrigerators, freezers and other refrigerating or freezing equipment – Parts0.822742871120USED CHANGZHOU KWANGYANG MOTORBYKEMotorcycles (including mopeds) and cycles fitted with an auxiliary motor – With reciprocating internal combustion piston engine of a cylinder capacity exceeding 50 cm³ but not exceeding 250 cm³0.826228940540SURFACE MOUNTED LIGHTSLamps and lighting fittings including searchlights and spotlights and parts thereof – Other electric lamps and lighting fittings0.817389842131FILTER ASSY, AIR CLEANERCentrifuges, including centrifugal dryers; filtering or purifying machinery and apparatus for liquids or gases – Intake air filters for internal combustion engines0.831361BOTTOM5 casos de similitud mínima:
+HS06Descripción de la mercaderíaDescripción completa del HS06Similitud de coseno741820SHOWER HEAD SQUARE BLACK 260X 190mmTable, kitchen or other household articles and parts thereof, of copper; pot scourers and scouring or polishing pads, gloves and the like, of copper; sanitary ware and parts thereof – Sanitary ware and parts thereof0.55359174182074182000000Table, kitchen or other household articles and parts thereof, of copper; pot scourers and scouring or polishing pads, gloves and the like, of copper; sanitary ware and parts thereof – Sanitary ware and parts thereof0.552399741820FREESTANDING BATH TOWERTable, kitchen or other household articles and parts thereof, of copper; pot scourers and scouring or polishing pads, gloves and the like, of copper; sanitary ware and parts thereof – Sanitary ware and parts thereof0.552331741820TRAP ASSEMBLYTable, kitchen or other household articles and parts thereof, of copper; pot scourers and scouring or polishing pads, gloves and the like, of copper; sanitary ware and parts thereof – Sanitary ware and parts thereof0.548731741820HG BATH MIXER WALL MOUNTED MYSPORT CHROMETable, kitchen or other household articles and parts thereof, of copper; pot scourers and scouring or polishing pads, gloves and the like, of copper; sanitary ware and parts thereof – Sanitary ware and parts thereof0.545765TOP5 Casos de similitud máxima:
+HS06Descripción de la mercaderíaDescripción completa del HS06Similitud de coseno640299Other:Other footwear with outer soles and uppers of rubber or pla:Other footwearOther footwear with outer soles and uppers of rubber or plastics. – Other footwear – Other0.98534520939Other fabrics:Woven fabrics of cotton, containing 85 % or more by weight of:DyedWoven fabrics of cotton, containing 85 % or more by weight of cotton, weighing more than 200 g/m² – Dyed – Other fabrics0.984521700729Other:Safety glass, consisting of toughened (tempered) or:Laminated safety glassSafety glass, consisting of toughened (tempered) or laminated glass – Laminated safety glass – Other0.984296848220Tapered roller bearings, including cone and tapered roller assembliesBall or roller bearings – Tapered roller bearings, including cone and tapered roller assemblies0.984269740729Other:Copper bars, rods and profiles.:Of copper alloysCopper bars, rods and profiles – Of copper alloys – Other0.984245Los casos de similitud mínima muestran indicios de una mala calidad de la descripción, incluso con un caso donde la descripción es el mismo código. Por otro lado, los casos de similitud máxima muestran que la descripción comercial, en realidad, consiste en una variante descripción de nomenclatura.
+En los casos de similitud dentro del entorno de la media, las descripciones parecen lógicas, relacionadas con la naturaleza de la mercadería, pero un tanto escuetas.
+Entrenamiento del clasificador
+Se procedió al diseño y el entrenamiento de un modelo para la clasificación de texto, usando una arquitectura encoder-classifier. Se exploran las opciones de transfer learning (fixed encoder), fine-tuning parcial y total, observando cómo varía su entrenamiento y cuestión de tiempo y resultados.
+Arquitectura encoder-classifier
+Usando PyTorch, se construye el modelo definiendo una clase de Python, la cual permite -durante su iniciación- definir la cantidad de capas del Encoder que deben ser ajustadas durante el entrenamiento. Además, se adapta a distintas cantidades de clases, para poder reutilizarse en modelos HS06. A continuación, se describen las partes de la clase HSClassifier:
+Encoder — DistilBertModel
+Embeddings
+* Word embeddings (30522 × 768): convierte cada token (con un vocabulario de 30522 tokens en inglés) en un vector de 768 dimensiones.
+* Positional embeddings (512 × 768): añade información de posición para conservar el orden de la secuencia, manejando una cantidad máxima de 512 tokens.
+* LayerNorm + Dropout: normaliza la suma embeddings + posicional y aplica dropout (p=0.1) para regularizar.
+Transformer (6 capas)
+Cada capa incluye:
+* Self-Attention con proyecciones lineales (q_lin, k_lin, v_lin) y dropout.
+* Add & LayerNorm tras la atención.
+* Feed-Forward (lin1: 768?3072, GELU, lin2: 3072?768) con dropout.
+* Add & LayerNorm final.
+Estas 6 capas refinan las representaciones contextualizadas del token [CLS].
+Clasificación
+* Linear (768?1024): proyecta la representación del token [CLS] a un espacio intermedio más amplio.
+* ReLU + BatchNorm1d: introduce no linealidad y estabiliza la distribución de activaciones.
+* Dropout (p=0.3): regulariza para evitar sobreajuste.
+* Linear (1024?1133): mapea al espacio de salida con una dimensión por cada clase posible.
+
+Flujo de datos en inferencia
+* La secuencia entra al embeddings y pasa por las 6 capas de Transformer.
+* Se toma la salida del token [CLS] (índice 0) como resumen de toda la secuencia.
+* Ese vector va al cabezal secuencial, generando logits sobre las 1133 clases.
+ Entrenamiento
+El entrenamiento se llevó a cabo en un Laptop GPU NVIDIA GeForce RTX 3060, pre-tokenizando las descripciones para ahorrar cómputo en el CPU. En la siguiente tabla, se definen los parámetro del entrenamiento para cada ejercicio:
+ParámetroTransfer learningFine-tune 2 capasFine-tune totaltargetHS04train/validation [%]90/10max_length [tokens]300batch_size [samples]32criterionCrossEntropyLossoptimizerAdamlr2e-5epochs1063time/epoch [min]~25 ~38~65Transfer learning [250 min]
+Fine-tune 2 capas [230 min]
+
+Fine-tune total [196 min]
+ Rendimiento
+Cada modelo fue evaluado con el set de validación, usado anteriormente para monitorear el overfitting, ahora como ser de prueba final. Los resultados de evaluar sobre la muestra total, se muestran a continuación:
+TopNTransfer learning [%]Fine-tune 2 capas [%]Fine-tune total [%]150.563.363.9260.772.973.4366.177.277.9469.479.980.6572.281.782.3TopN indica si la clasificación correcta está dentro de los N primeros candidatos, arrojados por el HSClassifier. Es decir, en Top1 el modelo acierta en el primer código recomendado.
+En estas condiciones, el modelo Fine-tune total resulta el mejor, tanto en términos de rendimiento, como en términos de tiempo de entrenamiento (comparando con el Fine-tune parcial).
+Para tener una perspectiva estadística del performance de cada modelo, se debería repetir la evaluación sampleando con reposición la muestra de prueba, observando la estabilidad del rendimiento.
+ Visualización del DistilBERT ajustado
+En carácter comparativo entre el modelo DistilBERT original y el modelo ajustado a este problema, se procede a recrear la visualización de los embeddings con PCA mostrada en el EDA detallado. A continuación, se observan los resultados, según HS06 descripciones de mercaderías - muestra de un 5 % (13,389 casos):
+
+En comparación con la visualización de la proyección del modelo original (pre-entrenado) esta muestra la formación de más clusters, además del rojo (HS02 87) que fue el único distinguible anteriormente.
+HS06 full eng (nomenclatura):
+
+De nuevo, para el nomenclador HS06 en inglés, el encoder ajustado logra una representación que favorece a la identificación de clusters. Anteriormente solo se identificaba el HS02 28 y 29, y en esta imagen se suma el HS02 03, 02 y otras más.
+ Análisis del error
+Observando las respuestas del modelo óptimo, se nota que las pseudo-probabilidades que asigna a los códigos candidatos dejan prever cuán “seguro” está el modelo sobre su recomendación. 
+Además, dado que el modelo no alcanza un rendimiento cercano al 100 % de aciertos, ni siquiera en un Top5, se deberían considerar alternativas de cara a una puesta en producción.
+Por ejemplo, en un TOP5 ordenado por Proba1 y mostrando solo hasta proba del Top3 se observa que la proba del Top1 es aproximadamente 1, mientras que para los otros candidatos esta proba es muy baja:
+DescriptionTRUETop1Proba1Top2Proba2Top3Proba3216648 NEW CKD MOTORCYCLE HUONIAO: MOD: GN125 ; CHS:L…871187111.00087140.00087030.000137054 NEW CKD MOTORCYCLE HUONIAO: CHS:LJEPCJL03MA021…871187111.00087030.00087140.00018312 315/80R22.5 M729 154M156L TL BRIDGESTONE TYRE401140111.00040120.00040130.000194131 NEW CKD MOTORCYCLE HUONIAO: CHS:LJEPCJL09MA022…871187111.00087030.00087140.00064969 NEW CKD MOTORCYCLE HUONIAO: CHS:LJEPCJL08MA021…871187111.00087030.00087140.000
+En estos casos, con proba del Top1 alta se observa una alta tasa de aciertos. Sin embargo, si miramos los mismos casos pero con BOTTON5:
+DescriptionTRUETop1Proba1Top2Proba2Top3Proba3116730 VOTA844885170.02539230.01939260.019260684 PALMOLIVE340119020.02421030.02439240.019147342 BIDET392273230.02439240.02285170.021228605 FREEHWEEL871487140.02234020.02238080.02058769 MOTIFSIRON581085360.02138080.01982050.019
+Se observan muchos desaciertos acompañados de bajas probas. 
+Esto motiva la iniciativa de entrenar un metamodelo que tome el output del modelo HSClassifier, junto con otras características de la descripción, para predecir la calidad de la predicción, descartando casos que no puedan resolverse de forma automática.
+ Discusión
+En esta sección se retoman los tópicos pendientes o meritorios de comentarios para resumir puntos conflictivos o aquellos que ameritan futuras investigaciones.
+Rendimiento y nivel de detalle
+El modelo desarrollado mostró un rendimiento muy prometedor, superando el 80% de precisión en las clasificaciones dentro de las primeras cinco predicciones (Top-5). En la literatura consultada, los rendimientos publicados superan el 95 % pero se limitan a la clasificación de un acotado número de códigos HS06 (Lee E. K., 2021).
+No obstante, surge el interrogante respecto a la necesidad práctica de clasificar a nivel HS06 o incluso más granularmente (NCM y SIM argentinos). Se requiere evaluar si mayores niveles de detalle aportan suficiente valor adicional respecto al esfuerzo y complejidad computacional involucrados.
+Modelo adaptado al español
+El presente estudio se realizó sobre datos en inglés. Dado que en Argentina y en otros países hispanohablantes las descripciones comerciales se manejan principalmente en español, sería crítico validar un modelo adaptado al español. Este punto abre camino a futuras investigaciones, incluyendo modelos preentrenados específicos para español, como BETO o RoBERTa en español.
+Transfer learning extendido (20 epochs o más)
+Aunque el fine-tuning completo demostró mejores resultados respecto a transfer learning parcial y total con menos epochs, queda pendiente investigar si extender significativamente el número de epochs de transfer learning podría mejorar aún más la precisión, aunque esto implica un mayor costo computacional y posible riesgo de sobreajuste.
+Necesidad de un dataset más extenso
+El dataset utilizado, aunque considerable (500 mil registros), es limitado si se considera la complejidad del sistema HS a nivel global. Futuras investigaciones deberían contemplar entrenamientos con datasets más amplios, del orden de millones de descripciones, para evaluar mejoras potenciales en rendimiento y robustez del modelo.
+Metamodelo para evaluar la calidad de clasificación
+Dado que el análisis de errores reveló que ciertas clasificaciones presentaban bajas probabilidades y alta incertidumbre, es recomendable desarrollar un metamodelo complementario. Este modelo podría tomar predicciones del clasificador principal junto con características adicionales (como la longitud de texto o similitudes coseno) para decidir cuándo una predicción es suficientemente segura para validación automática o requiere revisión humana.
+Soluciones híbridas combinando ML y LLMs
+La literatura reciente sugiere que combinar enfoques de Machine Learning (ML) con grandes modelos de lenguaje (LLMs) puede ofrecer resultados superiores y mayor flexibilidad operativa. Por tanto, futuras investigaciones deberían explorar modelos híbridos, donde un LLM actúe como una etapa de refinamiento o verificación posterior al modelo supervisado.
+Conclusiones
+El entrenamiento de un modelo de NLP para la clasificación arancelaria de mercaderías fue exitosamente realizado en el marco del presente trabajo, obteniendo resultados altamente prometedores.
+Entre los puntos principales a destacar se encuentran:
+* Rendimiento prometedor: El modelo optimizado mediante fine-tuning total alcanzó una precisión superior al 80% en predicciones Top-5, abarcando todo el universo de mercaderías del HS. Futuras mejoras a surgir de la discusión y próximos trabajos, promete un rendimiento explotable del modelo.
+* Comparación entre técnicas: Se observó que el fine-tuning total presentó un rendimiento superior tanto respecto al transfer learning parcial como al transfer learning sin ajuste de capas. Esto justifica un enfoque de ajuste fino completo en situaciones donde la calidad de clasificación es crítica.
+* Aplicabilidad práctica: Aunque la clasificación automática total presenta desafíos aún no resueltos (debido a incertidumbres en algunas predicciones), el modelo desarrollado constituye una herramienta muy prometedora para la validación inicial o asistencia en la clasificación, mejorando notablemente la eficiencia operativa.
+En resumen, los resultados obtenidos confirman la factibilidad técnica y operativa de implementar soluciones basadas en NLP avanzado para la clasificación de mercaderías, destacando su potencial para reducir costos, errores operativos y mejorar la eficiencia general del comercio internacional.
+Bibliografía
+Bojanowski, P. G. (2017). Enriching Word Vectors with Subword Information.
+Commission, E. (2025). Council decision on the position to be taken on behalf of the European Union in the World Customs Organization Council in relation to a WCO Article 16 Recommendation amending the Harmonised System. Brussels: COM(2025) 235 final - 2025/0114(NLE).
+Devlin, J. C. (2019). Pre-training of Deep Bidirectional Transformers for Language Understanding.
+Harsani, P. A. (2020). A Study using Machine Learning with NGram Model in Harmonized System Classification.
+Ignacio Marra de Artiñano, F. R. (2023). Automatic Product Classification in International Trade: Machine Learning and Large Language Models.
+Lau, J. H. (2016). An Empirical Evaluation of doc2vec with Practical Insights into Document Embedding Generation.
+Lee, E. K. (2021). Classification of Goods Using Text Descriptions With Sentences Retrieval.
+Lee, E. K. (2023). Explainable Product Classification for Customs.
+Sanh, V. D. (2020). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter.
+UNCTAD. (2025). Global trade update. 
+VUCE. (29 de 06 de 2025). Obtenido de Ventanilla Única del Comercio Exterior - Argentina: https://www.vuce.gob.ar/
+Wikipedia. (28 de 06 de 2025). Harmonized System. Obtenido de Wikipedia: https://en.wikipedia.org/wiki/Harmonized_System
+Xie, Y. S. (2022). Text classification in shipping industry using unsupervised models and Transformer based supervised models.
+
+
+
+
+
+Página 2 de 2
+
+
