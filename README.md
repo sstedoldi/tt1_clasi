@@ -84,4 +84,4 @@ La bibliografía principal se encuentra listada en el documento del trabajo de e
 
 ---
 
-> Última actualización: febrero de 2025. Este repositorio continuará evolucionando conforme se iteren las etapas de la tesis de maestría.
+> Última actualización: septiembre de 2025. Este repositorio continuará evolucionando conforme se iteren las etapas de la tesis de maestría.
