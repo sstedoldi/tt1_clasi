@@ -1,6 +1,6 @@
 # Clasificación Arancelaria con NLP
 
-Este repositorio recopila el trabajo práctico de la materia **Data Mining (UBA, 2025)** orientado a la clasificación arancelaria de mercaderías a partir de descripciones comerciales en texto libre. El objetivo inicial fue validar la factibilidad de entrenar modelos basados en *transformers* para recomendar códigos de la nomenclatura armonizada (HS) a nivel de partida (HS04), a pesar de contar con un dataset altamente desbalanceado y con miles de clases.
+Este repositorio recopila el trabajo de taller de tesis de la maestría de **Maestría en Explotación de Datos y Generación del Conocimiento (UBA)** orientado a la clasificación arancelaria de mercaderías a partir de descripciones comerciales en texto libre. El objetivo inicial fue validar la factibilidad de entrenar modelos basados en *transformers* para recomendar códigos de la nomenclatura armonizada (HS) a nivel de partida (HS04), a pesar de contar con un dataset altamente desbalanceado y con miles de clases.
 
 El proyecto evoluciona hacia la tesis de la **Maestría en Explotación de Datos y Generación del Conocimiento (UBA)**, donde se ampliará la batería de modelos, el análisis de errores y la capacidad de explicar las predicciones.
 
