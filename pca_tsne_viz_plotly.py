@@ -65,21 +65,21 @@ def pca_viz_embs(embeds, labels, n_componets=None, title='', legend_title='', ht
     return fig, l2c, pca
 
 def tsne_viz_embs(embeds, labels, n_componets=None, title='', legend_title='', html_output_file='',
-                  random_state=42, perplexity=50, max_iter=1000, learning_rate='auto',
-                  filter_labels=None, label2color=None, pca=None, tsne=None):
+                  random_state=42, perplexity=30, max_iter=1000, learning_rate='auto',
+                  filter_labels=None, label2color=None, init='pca', pca=None, tsne=None):
     
     embeds = np.asarray(embeds)
     labels = np.asarray(labels)
 
-    if pca is None:
-        pca = PCA(n_components=n_componets, random_state=42)
-        embeds = pca.fit_transform(embeds)
-    else:
-        embeds = pca.transform(embeds)
+    # if pca is None:
+    #     pca = PCA(n_components=n_componets, random_state=42)
+    #     embeds = pca.fit_transform(embeds)
+    # else:
+    #     embeds = pca.transform(embeds)
 
     if tsne is None:    
-        tsne = TSNE(n_components=n_componets, random_state=random_state, perplexity=perplexity, n_jobs=-3,
-                max_iter=max_iter, learning_rate=learning_rate, init='pca', metric='euclidean')
+        tsne = TSNE(n_components=n_componets, random_state=random_state, perplexity=perplexity, n_jobs=-4,
+                max_iter=max_iter, learning_rate=learning_rate, init=init, metric='euclidean')
         emb = tsne.fit_transform(embeds)
     else:
         emb = tsne.transform(embeds)
