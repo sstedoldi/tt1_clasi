@@ -33,6 +33,15 @@ Durante el EDA se generaron variables agregadas (longitud, indicadores de sub-to
 
 1. Crear un entorno virtual (Python 3.10+ recomendado) e instalar dependencias:
 
+### Windows PowerShell
+
+   ```powershell
+   py -3.12 -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip3 install -r requirements.txt
+   ```
+### Linux o WSL
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate
