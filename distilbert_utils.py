@@ -1,13 +1,18 @@
+import os, random
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from transformers import DistilBertTokenizerFast, DistilBertModel
+from transformers import set_seed as hf_set_seed
 
 import os
 import json
 import pandas as pd
+from tqdm.auto import tqdm
 import numpy as np
+import copy
 
 import time
 
@@ -78,9 +83,6 @@ class HSClassifier(nn.Module):
         return logits
     
 
-from tqdm.auto import tqdm
-
-
 # Accuracy functions
 def accuracy(outputs, labels):
     _, preds = torch.max(outputs, dim=1)
@@ -90,8 +92,9 @@ def top5_accuracy(outputs, labels):
     top5 = torch.topk(outputs, 5, dim=1).indices
     return sum([labels[i] in top5[i] for i in range(labels.size(0))])
 
-def train_epoch(model, data_loader, criterion, optimizer, device):
-    print("Model is training on:", next(model.parameters()).device)
+def train_epoch(model, data_loader, criterion, optimizer, device, verbose=False):
+    if verbose:
+        print("Model is training on:", next(model.parameters()).device)
     model.train()
 
     losses = []
@@ -160,6 +163,73 @@ def eval_model(model, data_loader, criterion, device):
     return (correct / len(data_loader.dataset), 
             correct_top5 / len(data_loader.dataset),
               np.mean(losses))
+
+
+class EarlyStopping:
+    """
+    Stops training when a monitored metric has stopped improving.
+
+    mode:
+      - "min": lower is better (e.g., val_loss)
+      - "max": higher is better (e.g., val_acc)
+    """
+    def __init__(
+        self,
+        patience: int = 3,
+        min_delta: float = 0.0,
+        mode: str = "min",
+        warmup_epochs: int = 0,
+        restore_best: bool = True,
+    ):
+        if mode not in ("min", "max"):
+            raise ValueError("mode must be 'min' or 'max'")
+
+        self.patience = patience
+        self.min_delta = min_delta
+        self.mode = mode
+        self.warmup_epochs = warmup_epochs
+        self.restore_best = restore_best
+
+        self.best_score = None
+        self.best_state = None
+        self.bad_epochs = 0
+        self.epoch = 0
+
+    def _is_improvement(self, score: float) -> bool:
+        if self.best_score is None:
+            return True
+        if self.mode == "min":
+            return score < (self.best_score - self.min_delta)
+        else:
+            return score > (self.best_score + self.min_delta)
+
+    def step(self, score: float, model) -> bool:
+        """
+        Returns True if training should stop.
+        """
+        self.epoch += 1
+
+        # Warmup: never stop during first N epochs
+        if self.epoch <= self.warmup_epochs:
+            if self.best_score is None or self._is_improvement(score):
+                self.best_score = score
+                if self.restore_best:
+                    self.best_state = copy.deepcopy(model.state_dict())
+            return False
+
+        if self._is_improvement(score):
+            self.best_score = score
+            self.bad_epochs = 0
+            if self.restore_best:
+                self.best_state = copy.deepcopy(model.state_dict())
+        else:
+            self.bad_epochs += 1
+
+        return self.bad_epochs >= self.patience
+
+    def restore(self, model):
+        if self.restore_best and self.best_state is not None:
+            model.load_state_dict(self.best_state)
 
 
 class HSDataset(Dataset):
@@ -288,15 +358,36 @@ def predict_and_evaluate(
     return results, metrics
 
 
-def bootstrap_sampling(df, test_fraction=0.1):
+def bootstrap_sampling(df, test_fraction=0.1, seed=42) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Determine the number of test samples
     n_test = int(len(df) * test_fraction)
     # Perform bootstrap sampling for the test set
-    test_set = df.sample(n=n_test, replace=True)
+    test_set = df.sample(n=n_test, replace=True, random_state=seed)
     # Remove the test samples from the original dataframe to create the training set
     train_set = df.drop(test_set.index)
     
     return train_set, test_set
+
+
+def seed_everything(seed: int, deterministic: bool = True):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    hf_set_seed(seed)  # cubre random/np/torch también, pero lo dejamos explícito
+
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
+
+        # Para mayor determinismo en CUDA (matmuls). En algunas GPUs/ops es clave:
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 
 def iterative_training(
@@ -304,7 +395,6 @@ def iterative_training(
     text_col: str,
     target_col: str,
     iterations: int,
-    num_epochs: int,
     max_length: int,
     loader_batch_size: int,
     shuffle: bool,
@@ -313,13 +403,20 @@ def iterative_training(
     out_dir: str,
     *,
     df: pd.DataFrame,
-    seeds: Sequence[int],
+    max_epochs: int = 30,
+    early_stopping: bool = True,
+    monitor: str = "val_loss",   # "val_loss" or "val_acc" etc.
+    patience: int = 3,
+    min_delta: float = 0.0,
+    warmup_epochs: int = 1,
+    seeds: Sequence[int] = None,
     tokenizer,
     label_dir: str,
     fine_tune: bool = False,
     val_shuffle: Optional[bool] = None,
     num_workers: int = 0,
     device: Optional[torch.device] = None,
+    verbose: bool = True,
 ) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
     """
     Entrena iterations modelos (distintos seeds) y devuelve:
@@ -329,6 +426,14 @@ def iterative_training(
 
     if val_shuffle is None:
         val_shuffle = False  # en general no querés shuffle en validación
+
+    if seeds is None:
+        min_val = 0
+        max_val = 999999999
+        seeds = []
+        for i in range(iterations):
+            seed = random.randint(min_val, max_val)
+            seeds.append(seed)
 
     if iterations > len(seeds):
         raise ValueError(f"iterations ({iterations}) > len(seeds) ({len(seeds)}).")
@@ -342,6 +447,7 @@ def iterative_training(
     for iter_i in range(iterations):
         seed = seeds[iter_i]
         print(f"\n=== Iteration {iter_i+1}/{iterations} seed {seed} ===")
+        seed_everything(seed, deterministic=False)
 
         model_name = f"DBERT_{train_type}_{text_col}_{target_col}_seed{seed}"
         print(f"Model name: {model_name}")
@@ -416,22 +522,34 @@ def iterative_training(
             "val_top5_acc": [],
         }
 
-        for epoch in range(num_epochs):
-            print(f"Epoch {epoch + 1}/{num_epochs}\n" + "-" * 10)
+        if monitor == "val_loss":
+            es_mode = "min"
+        elif monitor in ("val_acc", "val_top5_acc"):
+            es_mode = "max"
+        else:
+            raise ValueError(f"Unknown monitor={monitor}")
+
+        es = EarlyStopping(
+            patience=patience,
+            min_delta=min_delta,
+            mode=es_mode,
+            warmup_epochs=warmup_epochs,
+            restore_best=True,
+        ) if early_stopping else None
+
+        for epoch in range(max_epochs):
+            if verbose:
+                print(f"Epoch {epoch + 1}/{max_epochs}\n" + "-" * 10)
+    
             start_time = time.time()
 
             train_acc, train_top5_acc, train_loss = train_epoch(
-                model, train_loader, criterion, optimizer, device
+                model, train_loader, criterion, optimizer, device,
+                verbose=verbose
             )
-            print(f"Train loss {train_loss} accuracy {train_acc} top5_accuracy {train_top5_acc}")
-
             val_acc, val_top5_acc, val_loss = eval_model(
                 model, val_loader, criterion, device
             )
-            print(f"Validation loss {val_loss} accuracy {val_acc} top5_accuracy {val_top5_acc}")
-
-            epoch_time = time.time() - start_time
-            print(f"Epoch {epoch + 1} completed in {epoch_time/60:.2f} minutes.\n")
 
             history["train_loss"].append(train_loss)
             history["train_acc"].append(train_acc)
@@ -439,6 +557,32 @@ def iterative_training(
             history["val_loss"].append(val_loss)
             history["val_acc"].append(val_acc)
             history["val_top5_acc"].append(val_top5_acc)
+
+            if verbose:
+                print(f"Train loss {train_loss:.4f} acc {train_acc:.4f} top5 {train_top5_acc:.4f}")
+                print(f"Val   loss {val_loss:.4f} acc {val_acc:.4f} top5 {val_top5_acc:.4f}")
+
+            epoch_time = time.time() - start_time
+            if verbose:
+                print(f"Epoch completed in {epoch_time/60:.2f} minutes.\n")
+
+            # ---- EARLY STOPPING DECISION ----
+            if es is not None:
+                current = {
+                    "val_loss": val_loss,
+                    "val_acc": val_acc,
+                    "val_top5_acc": val_top5_acc,
+                }[monitor]
+
+                if es.step(current, model):
+                    print(
+                        f"[EarlyStopping] Stop at epoch {epoch+1}. "
+                        f"Best {monitor}={es.best_score:.6f}"
+                    )
+                    break
+
+        if es is not None:
+            es.restore(model)
 
         # Evaluate (sobre val_df)
         results, metrics = predict_and_evaluate(
