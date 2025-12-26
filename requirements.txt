@@ -13,6 +13,7 @@ transformers==4.51.3 # home
 scikit-learn==1.6.1 # home
 jupyter
 ipykernel
+google-cloud-storage==3.7.0
 # running manual pip install for torch for laptop gpu
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 # torch==2.4.1 # office
