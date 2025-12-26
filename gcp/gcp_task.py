@@ -6,8 +6,8 @@ import torch
 from transformers import DistilBertTokenizerFast
 from google.cloud import storage
 
-# Importamos tus utilidades (deben estar en la misma carpeta al subir)
-import distilbert_utils
+# Importamos tus utilidades
+import distilbert_utils as distilbert_utils
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
     """Descarga un archivo desde GCS."""
@@ -34,7 +34,7 @@ def upload_directory(local_path, bucket_name, gcs_path):
             blob.upload_from_filename(local_file)
 
 def main(args):
-    # 1. Preparar Entorno Local (Dentro del contenedor)
+    # Preparar Entorno Local (Dentro del contenedor)
     # Limpiamos si existen para evitar residuos
     if os.path.exists("data"): shutil.rmtree("data")
     if os.path.exists("results"): shutil.rmtree("results")
@@ -45,7 +45,7 @@ def main(args):
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(label_dir, exist_ok=True)
 
-    # 2. Descargar Datos
+    # Descargar Datos
     if args.data_path.startswith("gs://"):
         # Parsear gs://bucket/path
         parts = args.data_path.replace("gs://", "").split("/")
@@ -57,7 +57,7 @@ def main(args):
         # Modo local para pruebas
         local_data_path = args.data_path
 
-    # 3. Cargar y Preprocesar Datos
+    # Cargar y Preprocesar Datos
     print(f"=== Cargando datos desde {local_data_path} ===")
     colspecs = [(0, 6), (6, None)]
     df = pd.read_fwf(
@@ -80,8 +80,8 @@ def main(args):
 
     print(f"Dataset final: {df.shape} filas.")
 
-    # 4. Configurar Estrategia de Entrenamiento
-    # Mapeo según tu notebook:
+    # Configurar Estrategia de Entrenamiento
+
     # FE (Fixed Encoder): fine_tune=False, layers=0
     # FFT (Full Fine-Tune): fine_tune=True, layers=0 (0 implica todas en tu utils)
     # PFT (Partial Fine-Tune): fine_tune=True, layers=2
@@ -103,7 +103,7 @@ def main(args):
 
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
-    # 5. Ejecutar Entrenamiento Iterativo
+    # Ejecutar Entrenamiento Iterativo
     # Llamamos a tu función utils.iterative_training
     distilbert_utils.iterative_training(
         train_type=args.train_type,
@@ -122,12 +122,12 @@ def main(args):
         label_dir=label_dir,
         fine_tune=fine_tune,
         n_finetune_layers=n_finetune_layers,
-        patience=3,             # Hardcoded según notebook
-        monitor="val_loss",     # Hardcoded según notebook
+        patience=3,           
+        monitor="val_loss",     
         verbose=True
     )
 
-    # 6. Guardar Resultados en GCS
+    # Guardar Resultados en GCS
     # Subimos a la carpeta especificada en args.job_dir
     upload_directory(out_dir, args.output_bucket, args.job_dir)
     print("=== Trabajo Terminado Exitosamente ===")
@@ -142,12 +142,12 @@ if __name__ == "__main__":
     
     # Training Args
     parser.add_argument('--train_type', type=str, required=True, choices=['fe', 'fft', 'pft'])
-    parser.add_argument('--iterations', type=int, default=3)
-    parser.add_argument('--max_epochs', type=int, default=15)
+    parser.add_argument('--iterations', type=int, default=10)
+    parser.add_argument('--max_epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--lr', type=float, default=5e-5)
     parser.add_argument('--max_length', type=int, default=128)
-    parser.add_argument('--test_fraction', type=float, default=0.1) # 10% test
+    parser.add_argument('--test_fraction', type=float, default=0.05) # 5% test
     parser.add_argument('--sample_frac', type=float, default=1.0)   # 1.0 = 100% data
 
     args = parser.parse_args()

@@ -1,0 +1,5 @@
+setup.py
+gcp_task.egg-info/PKG-INFO
+gcp_task.egg-info/SOURCES.txt
+gcp_task.egg-info/dependency_links.txt
+gcp_task.egg-info/top_level.txt
