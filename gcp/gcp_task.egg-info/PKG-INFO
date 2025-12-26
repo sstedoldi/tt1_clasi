@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: gcp_task
+Version: 0.1
+Summary: Training package for Vertex AI
+Dynamic: summary

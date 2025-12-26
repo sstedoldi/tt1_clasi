@@ -5,3 +5,5 @@ venv_p38/
 __pycache__/
 
 good_desc_embs_labels.npz
+
+gcp/gcp_task.egg-info/
