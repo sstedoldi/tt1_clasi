@@ -81,7 +81,6 @@ def main(args):
     print(f"Dataset final: {df.shape} filas.")
 
     # Configurar Estrategia de Entrenamiento
-
     # FE (Fixed Encoder): fine_tune=False, layers=0
     # FFT (Full Fine-Tune): fine_tune=True, layers=0 (0 implica todas en tu utils)
     # PFT (Partial Fine-Tune): fine_tune=True, layers=2
@@ -124,6 +123,7 @@ def main(args):
         n_finetune_layers=n_finetune_layers,
         patience=3,           
         monitor="val_loss",     
+        num_workers=args.num_workers,
         verbose=True
     )
 
@@ -143,10 +143,11 @@ if __name__ == "__main__":
     # Training Args
     parser.add_argument('--train_type', type=str, required=True, choices=['fe', 'fft', 'pft'])
     parser.add_argument('--iterations', type=int, default=10)
-    parser.add_argument('--max_epochs', type=int, default=20)
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--lr', type=float, default=5e-5)
-    parser.add_argument('--max_length', type=int, default=128)
+    parser.add_argument('--max_epochs', type=int, default=30)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--max_length', type=int, default=300)
+    parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--test_fraction', type=float, default=0.05) # 5% test
     parser.add_argument('--sample_frac', type=float, default=1.0)   # 1.0 = 100% data
 

@@ -12,7 +12,8 @@ workerPoolSpecs:
       args:
         - --data_path=gs://distiltbert-train/data/raw_data_HScodes_desc.txt
         - --output_bucket=distiltbert-train
-        - --job_dir=experiments/FFT_FullFineTune
-        - --train_type=fft
-        - --iterations=10
-        - --max_epochs=7
+        - --job_dir=experiments/test
+        - --train_type=fe
+        - --iterations=2
+        - --max_epochs=3
+        - --num_workers=2
