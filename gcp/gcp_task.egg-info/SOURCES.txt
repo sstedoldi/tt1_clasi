@@ -1,3 +1,5 @@
+distilbert_utils.py
+gcp_task.py
 setup.py
 gcp_task.egg-info/PKG-INFO
 gcp_task.egg-info/SOURCES.txt

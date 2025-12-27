@@ -1,10 +1,9 @@
-from setuptools import find_packages
 from setuptools import setup
 
 setup(
     name='gcp_task',
     version='0.1',
-    packages=find_packages(),
+    py_modules=['gcp_task', 'distilbert_utils'], 
     include_package_data=True,
     description='Training package for Vertex AI'
 )
