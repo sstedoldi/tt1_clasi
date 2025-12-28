@@ -1,22 +1,22 @@
 workerPoolSpecs:
   - machineSpec:
-      machineType: g2-standard-4  # Serie G2 incluye la GPU L4
+      machineType: g2-standard-4
       acceleratorType: NVIDIA_L4
       acceleratorCount: 1
     replicaCount: 1
-    pythonPackageSpec:
-      executorImageUri: us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.2-1.py310:latest
-      packageUris:
-        - gs://distiltbert-train/code/gcp_task-0.1.tar.gz
-      pythonModule: gcp_task
+    
+    containerSpec:
+      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v1
+      
       args:
         - --data_path=gs://distiltbert-train/data/raw_data_HScodes_desc.txt
         - --output_bucket=distiltbert-train
-        - --job_dir=experiments/test
+        - --job_dir=experiments/custom_container_v1
         - --train_type=fe
         - --iterations=2
         - --max_epochs=3
         - --num_workers=2
+
 scheduling:
   strategy: FLEX_START
   maxWaitDuration: 7200s
