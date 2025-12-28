@@ -16,6 +16,7 @@ setup(
         'pandas>=2.2.3',
         'numpy',              
         'tqdm>=4.67.1',
+        'python-json-logger>=4.0.0',
         
         # --- GCP Integration ---
         'google-cloud-storage>=3.7.0'

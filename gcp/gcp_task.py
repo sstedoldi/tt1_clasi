@@ -103,7 +103,7 @@ def main(args):
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
     # Ejecutar Entrenamiento Iterativo
-    # Llamamos a tu función utils.iterative_training
+    # Llamamos a utils.iterative_training
     distilbert_utils.iterative_training(
         train_type=args.train_type,
         text_col='GOODS_DESCRIPTION',   # Fijo

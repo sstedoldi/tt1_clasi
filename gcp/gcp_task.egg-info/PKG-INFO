@@ -7,6 +7,7 @@ Requires-Dist: scikit-learn>=1.6.1
 Requires-Dist: pandas>=2.2.3
 Requires-Dist: numpy
 Requires-Dist: tqdm>=4.67.1
+Requires-Dist: python-json-logger>=4.0.0
 Requires-Dist: google-cloud-storage>=3.7.0
 Dynamic: requires-dist
 Dynamic: summary
