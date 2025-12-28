@@ -1,5 +1,12 @@
 Metadata-Version: 2.4
 Name: gcp_task
 Version: 0.1
-Summary: Training package for Vertex AI
+Summary: Training package for Vertex AI custom job
+Requires-Dist: transformers>=4.51.3
+Requires-Dist: scikit-learn>=1.6.1
+Requires-Dist: pandas>=2.2.3
+Requires-Dist: numpy
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: google-cloud-storage>=3.7.0
+Dynamic: requires-dist
 Dynamic: summary
