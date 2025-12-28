@@ -4,20 +4,16 @@ import sys
 import time
 
 REGIONS_PRIORITY = [
+    # using only zones with g2-standard-4
     "us-central1",      # Iowa
     "us-east1",         # South Carolina
-    # "us-west1",         # Oregon
+    "us-west1",         # Oregon
     # "us-west4",         # Las Vegas
-    # "us-east4",         # Virginia
-    
-    # "europe-west4",     # Netherlands (Hub fuerte de AI)
-    # "europe-west1",     # Belgium
-    
-    "asia-east1",       # Taiwan
-    "asia-northeast1",  # Tokyo
-    # "asia-southeast1",  # Singapore
-    # "asia-south1",      # Mumbai
-    # "australia-southeast1" # Sydney
+    "us-east4",         # Virginia
+    # "asia-east1",       # Taiwan
+    # "asia-northeast1",  # Tokyo
+    "asia-southeast1",  # Singapore
+    "europe-west4",   # Netherlands
 ]
 
 def parse_arguments():
@@ -80,22 +76,22 @@ def main():
     print("------------------------------------------------")
 
     job_launched = False
+    while not job_launched:
+        for region in REGIONS_PRIORITY:
+            success = run_job(region, args.display_name, args.config)
+            if success:
+                job_launched = True
+                print("------------------------------------------------")
+                print(f"🎉 Proceso finalizado. El job está corriendo en {region}.")
+                print("🛑 Deteniendo script para evitar costos duplicados.")
+                break
+            time.sleep(3)
 
-    for region in REGIONS_PRIORITY:
-        success = run_job(region, args.display_name, args.config)
-        
-        if success:
-            job_launched = True
-            print("------------------------------------------------")
-            print(f"🎉 Proceso finalizado. El job está corriendo en {region}.")
-            print("🛑 Deteniendo script para evitar costos duplicados.")
-            break
-        time.sleep(3)
-
-    if not job_launched:
-        print("\n💀 No se pudo lanzar el job en ninguna de las regiones listadas.")
-        print("Revisa tus cuotas (Quotas) en IAM & Admin o intenta más tarde.")
-        sys.exit(1)
+        if not job_launched:
+            print("\n💀 No se pudo lanzar el job en ninguna de las regiones listadas.")
+            print("💡 Sugerencia: Verifica si hay problemas de cuota o stock en las regiones.")
+            print("♻️  Reintentando desde el inicio de la lista de regiones...")
+            # sys.exit(1)
 
 if __name__ == "__main__":
     main()

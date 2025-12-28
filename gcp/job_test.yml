@@ -17,3 +17,6 @@ workerPoolSpecs:
         - --iterations=2
         - --max_epochs=3
         - --num_workers=2
+scheduling:
+  strategy: FLEX_START
+  maxWaitDuration: 7200s
