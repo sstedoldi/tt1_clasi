@@ -15,6 +15,7 @@ import numpy as np
 import copy
 
 import time
+import gc
 
 from typing import Sequence, Optional, Dict, Any, Tuple
 
@@ -413,6 +414,7 @@ def iterative_training(
     tokenizer,
     label_dir: str,
     fine_tune: bool = False,
+    n_finetune_layers: int = 0,
     val_shuffle: Optional[bool] = None,
     num_workers: int = 0,
     device: Optional[torch.device] = None,
@@ -502,7 +504,9 @@ def iterative_training(
             json.dump(labels_dict, f, indent=4, ensure_ascii=False)
 
         # Model
-        model = HSClassifier(n_classes=len(label2id), fine_tune=fine_tune)
+        model = HSClassifier(n_classes=len(label2id), 
+                             fine_tune=fine_tune,
+                             n_finetune_layers=n_finetune_layers)
 
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -598,7 +602,18 @@ def iterative_training(
         all_metrics.append({"model": model_name, **metrics})
 
         del model
+        del optimizer
+        del train_encodings
+        del val_encodings
+        del train_dataset
+        del val_dataset
+        del train_loader
+        del val_loader
+        
         torch.cuda.empty_cache()
+        gc.collect() 
+        
+        print(f"Memoria liberada tras iteración {iter_i+1}")
 
     metrics_df = pd.DataFrame(all_metrics).set_index("model").sort_index()
 
