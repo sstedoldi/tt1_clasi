@@ -2,7 +2,6 @@ import argparse
 import os
 import shutil
 import pandas as pd
-import torch
 from transformers import DistilBertTokenizerFast
 from google.cloud import storage
 
