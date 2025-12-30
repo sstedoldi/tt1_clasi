@@ -1,3 +1,4 @@
+# Unused setup.py for GCP Vertex AI custom training job
 from setuptools import setup
 
 setup(
