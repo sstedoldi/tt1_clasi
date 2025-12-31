@@ -6,18 +6,18 @@ workerPoolSpecs:
     replicaCount: 1
     
     containerSpec:
-      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v6
+      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v8
       
       args:
         - --data_path=gs://distiltbert-train/data/raw_data_HScodes_desc.txt
         - --output_bucket=distiltbert-train
-        - --job_dir=experiments/job_fft
+        - --job_dir=experiments/job_fft_v8
         - --train_type=fft
         - --iterations=5
         - --max_epochs=7
         - --num_workers=2
-        - --batch_size=256
-        - --lr=3e-4
+        - --batch_size=128
+        - --lr=1e-4
 
 scheduling:
   strategy: FLEX_START

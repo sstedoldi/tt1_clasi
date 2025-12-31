@@ -2,23 +2,24 @@ import argparse
 import os
 import shutil
 import pandas as pd
+import logging
 from transformers import DistilBertTokenizerFast
 from google.cloud import storage
 
 # Importamos tus utilidades
 import distilbert_utils as distilbert_utils
 
-def download_blob(bucket_name, source_blob_name, destination_file_name):
+def download_blob(bucket_name, source_blob_name, destination_file_name, logger=logging.getLogger(__name__)):
     """Descarga un archivo desde GCS."""
-    print(f"Descargando gs://{bucket_name}/{source_blob_name} -> {destination_file_name}")
+    logger.info(f"Descargando gs://{bucket_name}/{source_blob_name} -> {destination_file_name}")
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(source_blob_name)
     blob.download_to_filename(destination_file_name)
 
-def upload_directory(local_path, bucket_name, gcs_path):
+def upload_directory(local_path, bucket_name, gcs_path, logger):
     """Sube todo el contenido de un directorio a GCS."""
-    print(f"Subiendo resultados a gs://{bucket_name}/{gcs_path}")
+    logger.info(f"Subiendo resultados a gs://{bucket_name}/{gcs_path}")
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     
@@ -33,6 +34,11 @@ def upload_directory(local_path, bucket_name, gcs_path):
             blob.upload_from_filename(local_file)
 
 def main(args):
+    # Configurar logging para que aparezca en Cloud Logging
+    logging.basicConfig(level=logging.INFO, 
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+
     # Preparar Entorno Local (Dentro del contenedor)
     # Limpiamos si existen para evitar residuos
     if os.path.exists("data"): shutil.rmtree("data")
@@ -51,13 +57,13 @@ def main(args):
         bucket_name = parts[0]
         blob_name = "/".join(parts[1:])
         local_data_path = os.path.join("data", "dataset.txt")
-        download_blob(bucket_name, blob_name, local_data_path)
+        download_blob(bucket_name, blob_name, local_data_path, logger)
     else:
         # Modo local para pruebas
         local_data_path = args.data_path
 
     # Cargar y Preprocesar Datos
-    print(f"=== Cargando datos desde {local_data_path} ===")
+    logger.info(f"=== Cargando datos desde {local_data_path} ===")
     colspecs = [(0, 6), (6, None)]
     df = pd.read_fwf(
         local_data_path,
@@ -74,10 +80,10 @@ def main(args):
     
     # Debugging: Sampleo opcional
     if args.sample_frac < 1.0:
-        print(f"AVISO: Usando submuestra del {args.sample_frac*100}%")
+        logger.info(f"AVISO: Usando submuestra del {args.sample_frac*100}%")
         df = df.sample(frac=args.sample_frac, random_state=42).reset_index(drop=True)
 
-    print(f"Dataset final: {df.shape} filas.")
+    logger.info(f"Dataset final: {df.shape} filas.")
 
     # Configurar Estrategia de Entrenamiento
     # FE (Fixed Encoder): fine_tune=False, layers=0
@@ -96,8 +102,8 @@ def main(args):
     else:
         raise ValueError("Tipo de entrenamiento desconocido")
 
-    print(f"=== Configuración: {args.train_type.upper()} ===")
-    print(f"Fine Tune: {fine_tune}, Layers: {n_finetune_layers}")
+    logger.info(f"=== Configuración: {args.train_type.upper()} ===")
+    logger.info(f"Fine Tune: {fine_tune}, Layers: {n_finetune_layers}")
 
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
@@ -128,8 +134,8 @@ def main(args):
 
     # Guardar Resultados en GCS
     # Subimos a la carpeta especificada en args.job_dir
-    upload_directory(out_dir, args.output_bucket, args.job_dir)
-    print("=== Trabajo Terminado Exitosamente ===")
+    upload_directory(out_dir, args.output_bucket, args.job_dir, logger)
+    logger.info("=== Trabajo Terminado Exitosamente ===")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
