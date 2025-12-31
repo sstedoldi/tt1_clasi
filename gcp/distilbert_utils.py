@@ -1,23 +1,30 @@
-import os, random
+# distilbert_utils.py
+import logging
+import pandas as pd
+import numpy as np
+import time
+import gc
+import os, random, copy
+import json
+from tqdm.auto import tqdm
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+
 from transformers import DistilBertTokenizerFast, DistilBertModel
 from transformers import set_seed as hf_set_seed
 
-import os
-import json
-import pandas as pd
-from tqdm.auto import tqdm
-import numpy as np
-import copy
+from typing import Sequence, Optional, Dict, Tuple
 
-import time
-import gc
-
-from typing import Sequence, Optional, Dict, Any, Tuple
+logging.basicConfig(level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class TokenizedDataset(Dataset):
     def __init__(self, encodings, labels):
@@ -95,7 +102,7 @@ def top5_accuracy(outputs, labels):
 
 def train_epoch(model, data_loader, criterion, optimizer, device, verbose=False):
     if verbose:
-        print("Model is training on:", next(model.parameters()).device)
+        logger.info(f"Model is training on: {next(model.parameters()).device}")
     model.train()
 
     losses = []
@@ -136,8 +143,8 @@ def train_epoch(model, data_loader, criterion, optimizer, device, verbose=False)
         sum(losses)  / len(losses)
     )
 
+
 def eval_model(model, data_loader, criterion, device):
-    # print("Model is eval on:", next(model.parameters()).device)
     model = model.eval()
     losses = []
     correct = 0
@@ -156,10 +163,6 @@ def eval_model(model, data_loader, criterion, device):
             correct_top5 += top5_accuracy(outputs, labels)
             
             losses.append(loss.item())
-    
-    # print("Input_ids device:", input_ids.device)
-    # print("Labels device:", labels.device)
-    # print("outputs device:", outputs.device)
     
     return (correct / len(data_loader.dataset), 
             correct_top5 / len(data_loader.dataset),
@@ -325,11 +328,11 @@ def predict_and_evaluate(
         for i in range(len(all_true_labels))
     ]) / len(all_true_labels)
 
-    print(f"Top-1 Accuracy: {accuracy_top1:.4f} %")
-    print(f"Top-2 Accuracy: {accuracy_top2:.4f} %")
-    print(f"Top-3 Accuracy: {accuracy_top3:.4f} %")
-    print(f"Top-4 Accuracy: {accuracy_top4:.4f} %")
-    print(f"Top-5 Accuracy: {accuracy_top5:.4f} %")
+    logger.info(f"Top-1 Accuracy: {accuracy_top1:.4f} %")
+    logger.info(f"Top-2 Accuracy: {accuracy_top2:.4f} %")
+    logger.info(f"Top-3 Accuracy: {accuracy_top3:.4f} %")
+    logger.info(f"Top-4 Accuracy: {accuracy_top4:.4f} %")
+    logger.info(f"Top-5 Accuracy: {accuracy_top5:.4f} %")
 
     metrics = {
     "top_1_acc": float(accuracy_top1),
@@ -391,6 +394,30 @@ def seed_everything(seed: int, deterministic: bool = True):
         os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 
+def plot_training_results(all_histories, out_dir):
+    """Genera una figura con Loss y Top-5 Acc para todas las iteraciones."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    
+    for model_name, hist in all_histories.items():
+        epochs = range(1, len(hist['train_loss']) + 1)
+        # Plot Loss
+        ax1.plot(epochs, hist['val_loss'], label=f'{model_name} (val)')
+        # Plot Top-5 Accuracy
+        ax2.plot(epochs, hist['val_top5_acc'], label=f'{model_name} (val)')
+
+    ax1.set_title('Validation Loss')
+    ax1.set_xlabel('Epochs')
+    ax1.legend(fontsize='small', ncol=2)
+    
+    ax2.set_title('Validation Top-5 Accuracy')
+    ax2.set_xlabel('Epochs')
+    ax2.legend(fontsize='small', ncol=2)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, 'training_summary.png'))
+    plt.close()
+
+
 def iterative_training(
     train_type: str,
     text_col: str,
@@ -445,14 +472,15 @@ def iterative_training(
 
     all_metrics = []
     scored_dfs = {}
+    master_history = []
 
     for iter_i in range(iterations):
         seed = seeds[iter_i]
-        print(f"\n=== Iteration {iter_i+1}/{iterations} seed {seed} ===")
+        logger.info(f"Iniciando Iteración {iter_i+1}/{iterations} - Seed: {seed}")
         seed_everything(seed, deterministic=False)
 
         model_name = f"DBERT_{train_type}_{text_col}_{target_col}_seed{seed}"
-        print(f"Model name: {model_name}")
+        logger.info(f"Model name: {model_name}")
 
         train_df, val_df = bootstrap_sampling(df, test_fraction=fraction, seed=seed)
 
@@ -511,7 +539,7 @@ def iterative_training(
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        print(f"Training on {device}")
+        logger.info(f"Training on {device}")
         model = model.to(device)
 
         criterion = nn.CrossEntropyLoss()
@@ -543,7 +571,7 @@ def iterative_training(
 
         for epoch in range(max_epochs):
             if verbose:
-                print(f"Epoch {epoch + 1}/{max_epochs}\n" + "-" * 10)
+                logger.info(f"Epoch {epoch + 1}/{max_epochs}\n" + "-" * 10)
     
             start_time = time.time()
 
@@ -563,12 +591,12 @@ def iterative_training(
             history["val_top5_acc"].append(val_top5_acc)
 
             if verbose:
-                print(f"Train loss {train_loss:.4f} acc {train_acc:.4f} top5 {train_top5_acc:.4f}")
-                print(f"Val   loss {val_loss:.4f} acc {val_acc:.4f} top5 {val_top5_acc:.4f}")
+                logger.info(f"Train loss {train_loss:.4f} acc {train_acc:.4f} top5 {train_top5_acc:.4f}")
+                logger.info(f"Val   loss {val_loss:.4f} acc {val_acc:.4f} top5 {val_top5_acc:.4f}")
 
             epoch_time = time.time() - start_time
             if verbose:
-                print(f"Epoch completed in {epoch_time/60:.2f} minutes.\n")
+                logger.info(f"Epoch completed in {epoch_time/60:.2f} minutes.\n")
 
             # ---- EARLY STOPPING DECISION ----
             if es is not None:
@@ -579,11 +607,25 @@ def iterative_training(
                 }[monitor]
 
                 if es.step(current, model):
-                    print(
+                    logger.info(
                         f"[EarlyStopping] Stop at epoch {epoch+1}. "
                         f"Best {monitor}={es.best_score:.6f}"
                     )
                     break
+
+        for epoch_idx in range(len(history['train_loss'])):
+            master_history.append({
+                'iteration': iter_i,
+                'seed': seed,
+                'epoch': epoch_idx + 1,
+                'train_loss': history['train_loss'][epoch_idx],
+                'train_acc': history['train_acc'][epoch_idx],
+                'train_top5_acc': history['train_top5_acc'][epoch_idx],                
+                'val_loss': history['val_loss'][epoch_idx],
+                'val_acc': history['val_acc'][epoch_idx],
+                'val_top5_acc': history['val_top5_acc'][epoch_idx]
+            })
+        
 
         if es is not None:
             es.restore(model)
@@ -598,7 +640,7 @@ def iterative_training(
             device=device,
         )
 
-        scored_dfs[model_name] = results
+        scored_dfs[model_name] = {"results": results, "history": history}
         all_metrics.append({"model": model_name, **metrics})
 
         del model
@@ -613,13 +655,26 @@ def iterative_training(
         torch.cuda.empty_cache()
         gc.collect() 
         
-        print(f"Memoria liberada tras iteración {iter_i+1}")
+        logger.info(f"Memoria liberada tras iteración {iter_i+1}")
 
     metrics_df = pd.DataFrame(all_metrics).set_index("model").sort_index()
 
     # Guardar métricas (nombre correcto)
     metrics_path = os.path.join(out_dir, f"metrics_{train_type}_{text_col}_{target_col}.csv")
     metrics_df.to_csv(metrics_path, index=True)
-    print(f"Saved metrics to {metrics_path}")
+    logger.info(f"Saved metrics to {metrics_path}")
 
-    return scored_dfs, metrics_df
+    # Guardar CSV de historial completo
+    history_df = pd.DataFrame(master_history)
+    history_path = os.path.join(out_dir, f"history_all_iters_{train_type}.csv")
+    history_df.to_csv(history_path, index=False)
+    logger.info(f"Historial guardado en {history_path}")
+
+    # Generar Plots
+    plot_training_results({k: v['history'] for k, v in scored_dfs.items()}, out_dir)
+    logger.info("Gráficos de entrenamiento generados.")
+
+    # Ajustamos el retorno para mantener compatibilidad si es necesario
+    final_scored_dfs = {k: v['results'] for k, v in scored_dfs.items()}
+
+    return final_scored_dfs, metrics_df
