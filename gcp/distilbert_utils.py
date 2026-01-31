@@ -1,3 +1,4 @@
+# Utils for DistilBERT iterative training and evaluation
 # distilbert_utils.py
 import logging
 import pandas as pd
@@ -96,77 +97,83 @@ def accuracy(outputs, labels):
     _, preds = torch.max(outputs, dim=1)
     return torch.sum(preds == labels).item()
 
-def top5_accuracy(outputs, labels):
-    top5 = torch.topk(outputs, 5, dim=1).indices
-    return sum([labels[i] in top5[i] for i in range(labels.size(0))])
+def topN_accuracy(outputs, labels, n=3):
+    topN = torch.topk(outputs, n, dim=1).indices
+    return sum([labels[i] in topN[i] for i in range(labels.size(0))])
+
+# def top5_accuracy(outputs, labels):
+#     top5 = torch.topk(outputs, 5, dim=1).indices
+#     return sum([labels[i] in top5[i] for i in range(labels.size(0))])
 
 def train_epoch(model, data_loader, criterion, optimizer, device, verbose=False):
     if verbose:
-        logger.info(f"Model is training on: {next(model.parameters()).device}")
+        logger.info(f"Model is training on: {device}")
+    
     model.train()
+    total_loss = 0
 
-    losses = []
-    correct = 0
-    correct_top5 = 0
+    top_n_correct = {n: 0 for n in range(1, 6)}
+    n_samples = len(data_loader.dataset)
 
-    # wrap your DataLoader in a tqdm iterator
     loop = tqdm(data_loader, desc="Training", leave=False)
     for batch in loop:
         input_ids      = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         labels         = batch['label'].to(device)
 
+        # Forward
         outputs = model(input_ids=input_ids, attention_mask=attention_mask)
         loss    = criterion(outputs, labels)
 
-        correct      += accuracy(outputs, labels)
-        correct_top5 += top5_accuracy(outputs, labels)
-        losses.append(loss.item())
-
+        # Backward
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
 
-        # update the tqdm bar with current metrics
+        # Metrics update
+        total_loss += loss.item()
+        for n in range(1, 6):
+            top_n_correct[n] += topN_accuracy(outputs, labels, n=n)
+
+        # Update tqdm progress bar
         loop.set_postfix(
             loss=f"{loss.item():.4f}",
-            acc=f"{correct/len(data_loader.dataset):.4f}",
-            top5=f"{correct_top5/len(data_loader.dataset):.4f}"
+            top1=f"{top_n_correct[1]/n_samples:.4f}",
+            top5=f"{top_n_correct[5]/n_samples:.4f}"
         )
 
-    # make sure you end the line so console prompt isn't on the last bar
-    print()
+    avg_loss = total_loss / len(data_loader)
+    accuracies = [top_n_correct[n] / n_samples for n in range(1, 6)]
 
-    return (
-        correct      / len(data_loader.dataset),
-        correct_top5 / len(data_loader.dataset),
-        sum(losses)  / len(losses)
-    )
+    return (accuracies[0], *accuracies, avg_loss)
+    # (Top1, Top1, Top2, Top3, Top4, Top5, AvgLoss) 
 
 
 def eval_model(model, data_loader, criterion, device):
-    model = model.eval()
-    losses = []
-    correct = 0
-    correct_top5 = 0
+    model.eval()
+    total_loss = 0
+
+    top_n_correct = {n: 0 for n in range(1, 6)}
+    n_samples = len(data_loader.dataset)
     
     with torch.no_grad():
         for batch in data_loader:
-            input_ids = batch['input_ids'].to(device)
+            input_ids      = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
-            labels = batch['label'].to(device)
+            labels         = batch['label'].to(device)
             
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            loss = criterion(outputs, labels)
+            loss    = criterion(outputs, labels)
 
-            correct += accuracy(outputs, labels)
-            correct_top5 += top5_accuracy(outputs, labels)
-            
-            losses.append(loss.item())
+            total_loss += loss.item()
+            for n in range(1, 6):
+                top_n_correct[n] += topN_accuracy(outputs, labels, n=n)
     
-    return (correct / len(data_loader.dataset), 
-            correct_top5 / len(data_loader.dataset),
-              np.mean(losses))
+    avg_loss = total_loss / len(data_loader)
+    accuracies = [top_n_correct[n] / n_samples for n in range(1, 6)]
+
+    return (accuracies[0], *accuracies, avg_loss)
+    # (Top1, Top1, Top2, Top3, Top4, Top5, AvgLoss) 
 
 
 class EarlyStopping:
@@ -548,9 +555,17 @@ def iterative_training(
         history = {
             "train_loss": [],
             "train_acc": [],
+            "train_top1_acc": [], # idem train_acc
+            "train_top2_acc": [],
+            "train_top3_acc": [],
+            "train_top4_acc": [],
             "train_top5_acc": [],
             "val_loss": [],
-            "val_acc": [],
+            "val_acc": [], 
+            "val_top1_acc": [], # idem val_acc
+            "val_top2_acc": [],
+            "val_top3_acc": [],
+            "val_top4_acc": [],
             "val_top5_acc": [],
         }
 
@@ -575,24 +590,33 @@ def iterative_training(
     
             start_time = time.time()
 
-            train_acc, train_top5_acc, train_loss = train_epoch(
+            train_acc, train_top1_acc, train_top2_acc, train_top3_acc, train_top4_acc, train_top5_acc, train_loss = train_epoch(
                 model, train_loader, criterion, optimizer, device,
                 verbose=verbose
             )
-            val_acc, val_top5_acc, val_loss = eval_model(
+            val_acc, val_top1_acc, val_top2_acc, val_top3_acc, val_top4_acc, val_top5_acc, val_loss = eval_model(
                 model, val_loader, criterion, device
             )
 
             history["train_loss"].append(train_loss)
             history["train_acc"].append(train_acc)
+            history["train_top1_acc"].append(train_top1_acc)
+            history["train_top2_acc"].append(train_top2_acc)
+            history["train_top3_acc"].append(train_top3_acc)
+            history["train_top4_acc"].append(train_top4_acc)
             history["train_top5_acc"].append(train_top5_acc)
+
             history["val_loss"].append(val_loss)
             history["val_acc"].append(val_acc)
+            history["val_top1_acc"].append(val_top1_acc)
+            history["val_top2_acc"].append(val_top2_acc)
+            history["val_top3_acc"].append(val_top3_acc)
+            history["val_top4_acc"].append(val_top4_acc)
             history["val_top5_acc"].append(val_top5_acc)
 
             if verbose:
-                logger.info(f"Train loss {train_loss:.4f} acc {train_acc:.4f} top5 {train_top5_acc:.4f}")
-                logger.info(f"Val   loss {val_loss:.4f} acc {val_acc:.4f} top5 {val_top5_acc:.4f}")
+                logger.info(f"Train loss {train_loss:.4f} acc {train_acc:.4f} top1-5  {train_top1_acc:.4f} {train_top2_acc:.4f} {train_top3_acc:.4f} {train_top4_acc:.4f} {train_top5_acc:.4f}")
+                logger.info(f"Val   loss {val_loss:.4f}   acc {val_acc:.4f}   top1-5  {val_top1_acc:.4f}   {val_top2_acc:.4f}   {val_top3_acc:.4f}   {val_top4_acc:.4f}   {val_top5_acc:.4f}")
 
             epoch_time = time.time() - start_time
             if verbose:

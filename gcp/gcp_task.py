@@ -1,3 +1,5 @@
+# GCP Task Script for DistilBERT Training
+# gcp/gcp_task.py
 import argparse
 import os
 import shutil
@@ -6,7 +8,7 @@ import logging
 from transformers import DistilBertTokenizerFast
 from google.cloud import storage
 
-# Importamos tus utilidades
+# Local utils
 import distilbert_utils as distilbert_utils
 
 def download_blob(bucket_name, source_blob_name, destination_file_name, logger=logging.getLogger(__name__)):
@@ -26,43 +28,67 @@ def upload_directory(local_path, bucket_name, gcs_path, logger):
     for root, dirs, files in os.walk(local_path):
         for file in files:
             local_file = os.path.join(root, file)
-            # Calcular ruta relativa para mantener estructura
+            # Relative path
             relative_path = os.path.relpath(local_file, local_path)
             blob_path = os.path.join(gcs_path, relative_path)
             
             blob = bucket.blob(blob_path)
             blob.upload_from_filename(local_file)
 
-def main(args):
-    # Configurar logging para que aparezca en Cloud Logging
-    logging.basicConfig(level=logging.INFO, 
-                        format='%(asctime)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger(__name__)
+def setup_logging(out_dir):
+    log_file = os.path.join(out_dir, "training_log.log")
+    
+    # Root logger config
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file), # Save to file
+            logging.StreamHandler()        # Also print to console
+        ]
+    )
+    return log_file
 
-    # Preparar Entorno Local (Dentro del contenedor)
-    # Limpiamos si existen para evitar residuos
+def main(args):
+    # Local files preparation (inside container)
     if os.path.exists("data"): shutil.rmtree("data")
     if os.path.exists("results"): shutil.rmtree("results")
-    
+
     os.makedirs("data", exist_ok=True)
     out_dir = "results"
     label_dir = os.path.join(out_dir, "labels")
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(label_dir, exist_ok=True)
 
-    # Descargar Datos
+    # Logging cofig
+    log_file_path = os.path.join(out_dir, "training_execution.log")
+    
+    logging.basicConfig(
+        level=logging.INFO, 
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file_path),
+            logging.StreamHandler()          
+        ]
+    )
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=== Iniciando Tarea en GCP ===")
+    logger.info(f"Archivo de log local: {log_file_path}")
+
+    #  Data Loading
     if args.data_path.startswith("gs://"):
-        # Parsear gs://bucket/path
+        # Parsing gs://bucket/path
         parts = args.data_path.replace("gs://", "").split("/")
         bucket_name = parts[0]
         blob_name = "/".join(parts[1:])
         local_data_path = os.path.join("data", "dataset.txt")
         download_blob(bucket_name, blob_name, local_data_path, logger)
     else:
-        # Modo local para pruebas
+        # Local mode
         local_data_path = args.data_path
 
-    # Cargar y Preprocesar Datos
+    # Loading and processing data
     logger.info(f"=== Cargando datos desde {local_data_path} ===")
     colspecs = [(0, 6), (6, None)]
     df = pd.read_fwf(
@@ -78,14 +104,14 @@ def main(args):
     # Feature Engineering (HS04)
     df['HS04'] = df['HS06'].str[:4]
     
-    # Debugging: Sampleo opcional
+    # Debugging: optional sub-sampling
     if args.sample_frac < 1.0:
         logger.info(f"AVISO: Usando submuestra del {args.sample_frac*100}%")
         df = df.sample(frac=args.sample_frac, random_state=42).reset_index(drop=True)
 
     logger.info(f"Dataset final: {df.shape} filas.")
 
-    # Configurar Estrategia de Entrenamiento
+    # Training setup config
     # FE (Fixed Encoder): fine_tune=False, layers=0
     # FFT (Full Fine-Tune): fine_tune=True, layers=0 (0 implica todas en tu utils)
     # PFT (Partial Fine-Tune): fine_tune=True, layers=2
@@ -107,8 +133,8 @@ def main(args):
 
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 
-    # Ejecutar Entrenamiento Iterativo
-    # Llamamos a utils.iterative_training
+    # Iterative Training
+    logger.info("=== Iniciando Entrenamiento Iterativo ===")
     distilbert_utils.iterative_training(
         train_type=args.train_type,
         text_col='GOODS_DESCRIPTION',   # Fijo
@@ -132,8 +158,7 @@ def main(args):
         verbose=True
     )
 
-    # Guardar Resultados en GCS
-    # Subimos a la carpeta especificada en args.job_dir
+    # Saving results GCS into args.job_dir
     upload_directory(out_dir, args.output_bucket, args.job_dir, logger)
     logger.info("=== Trabajo Terminado Exitosamente ===")
 
