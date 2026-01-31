@@ -6,12 +6,12 @@ workerPoolSpecs:
     replicaCount: 1
     
     containerSpec:
-      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v9
+      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v10
       
       args:
         - --data_path=gs://distiltbert-train/data/raw_data_HScodes_desc.txt
         - --output_bucket=distiltbert-train
-        - --job_dir=experiments/job_fft_v9
+        - --job_dir=experiments/job_fft_v10
         - --train_type=fft
         - --iterations=5
         - --max_epochs=7
