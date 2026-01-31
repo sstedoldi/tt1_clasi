@@ -644,9 +644,17 @@ def iterative_training(
                 'epoch': epoch_idx + 1,
                 'train_loss': history['train_loss'][epoch_idx],
                 'train_acc': history['train_acc'][epoch_idx],
+                'train_top1_acc': history['train_top1_acc'][epoch_idx],
+                'train_top2_acc': history['train_top2_acc'][epoch_idx],
+                'train_top3_acc': history['train_top3_acc'][epoch_idx],
+                'train_top4_acc': history['train_top4_acc'][epoch_idx],
                 'train_top5_acc': history['train_top5_acc'][epoch_idx],                
                 'val_loss': history['val_loss'][epoch_idx],
                 'val_acc': history['val_acc'][epoch_idx],
+                'val_top1_acc': history['val_top1_acc'][epoch_idx],
+                'val_top2_acc': history['val_top2_acc'][epoch_idx],
+                'val_top3_acc': history['val_top3_acc'][epoch_idx],
+                'val_top4_acc': history['val_top4_acc'][epoch_idx],
                 'val_top5_acc': history['val_top5_acc'][epoch_idx]
             })
         
