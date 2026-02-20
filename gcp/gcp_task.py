@@ -66,6 +66,7 @@ def main(args):
     logging.basicConfig(
         level=logging.INFO, 
         format='%(asctime)s - %(levelname)s - %(message)s',
+        force=True,
         handlers=[
             logging.FileHandler(log_file_path),
             logging.StreamHandler()          
@@ -146,6 +147,7 @@ def main(args):
         shuffle=True,
         lr=args.lr,
         fraction=args.test_fraction,
+        bootstrap=args.bootstrap,
         out_dir=out_dir,
         df=df,
         tokenizer=tokenizer,
@@ -180,6 +182,12 @@ if __name__ == "__main__":
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--test_fraction', type=float, default=0.05) # 5% test
     parser.add_argument('--sample_frac', type=float, default=1.0)   # 1.0 = 100% data
-
+    parser.add_argument(
+        '--bootstrap', 
+        action=argparse.BooleanOptionalAction, 
+        default=True,
+        help="Usa --bootstrap para activar o --no-bootstrap para desactivar"
+        )
+    
     args = parser.parse_args()
     main(args)
