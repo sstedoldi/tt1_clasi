@@ -369,11 +369,11 @@ def predict_and_evaluate(
     return results, metrics
 
 
-def bootstrap_sampling(df, test_fraction=0.1, seed=42) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def sampling(df, test_fraction=0.1, seed=42, replace=False) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Determine the number of test samples
     n_test = int(len(df) * test_fraction)
-    # Perform bootstrap sampling for the test set
-    test_set = df.sample(n=n_test, replace=True, random_state=seed)
+
+    test_set = df.sample(n=n_test, replace=replace, random_state=seed)
     # Remove the test samples from the original dataframe to create the training set
     train_set = df.drop(test_set.index)
     
@@ -445,6 +445,7 @@ def iterative_training(
     min_delta: float = 0.0,
     warmup_epochs: int = 1,
     seeds: Sequence[int] = None,
+    bootstrap: bool = False,
     tokenizer,
     label_dir: str,
     fine_tune: bool = False,
@@ -489,7 +490,11 @@ def iterative_training(
         model_name = f"DBERT_{train_type}_{text_col}_{target_col}_seed{seed}"
         logger.info(f"Model name: {model_name}")
 
-        train_df, val_df = bootstrap_sampling(df, test_fraction=fraction, seed=seed)
+        if bootstrap:
+            train_df, val_df = sampling(df, test_fraction=fraction, seed=seed, replace=True)
+        else:
+            train_df, val_df = sampling(df, test_fraction=fraction, seed=seed, replace=False)
+
 
         # Label mappings (determinístico)
         unique_labels = sorted(df[target_col].astype(str).unique().tolist())
