@@ -1,0 +1,307 @@
+2026-02-20 13:04:59,131 - INFO - === Iniciando Tarea en GCP ===
+2026-02-20 13:04:59,131 - INFO - Archivo de log local: results/training_execution.log
+2026-02-20 13:04:59,131 - INFO - Descargando gs://distiltbert-train/data/raw_data_HScodes_desc.txt -> data/dataset.txt
+2026-02-20 13:05:01,420 - INFO - === Cargando datos desde data/dataset.txt ===
+2026-02-20 13:05:03,986 - INFO - Dataset final: (267780, 3) filas.
+2026-02-20 13:05:03,986 - INFO - === Configuración: FFT ===
+2026-02-20 13:05:03,986 - INFO - Fine Tune: True, Layers: 0
+2026-02-20 13:05:07,351 - INFO - === Iniciando Entrenamiento Iterativo ===
+2026-02-20 13:05:07,352 - INFO - Iniciando Iteración 1/5 - Seed: 131345983
+2026-02-20 13:05:07,354 - INFO - Model name: DBERT_fft_GOODS_DESCRIPTION_HS04_seed131345983
+2026-02-20 13:06:06,966 - INFO - Training on cuda
+2026-02-20 13:06:07,569 - INFO - Epoch 1/7
+----------
+2026-02-20 13:06:07,569 - INFO - Model is training on: cuda
+2026-02-20 14:00:21,229 - INFO - Train loss 2.9205 acc 0.4681 top1-5  0.4681 0.5617 0.6082 0.6380 0.6601
+2026-02-20 14:00:21,229 - INFO - Val   loss 2.0092   acc 0.5850   top1-5  0.5850   0.6883   0.7342   0.7615   0.7803
+2026-02-20 14:00:21,229 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 14:00:21,244 - INFO - Epoch 2/7
+----------
+2026-02-20 14:00:21,244 - INFO - Model is training on: cuda
+2026-02-20 14:54:34,201 - INFO - Train loss 1.8213 acc 0.6147 top1-5  0.6147 0.7160 0.7630 0.7911 0.8113
+2026-02-20 14:54:34,201 - INFO - Val   loss 1.7379   acc 0.6362   top1-5  0.6362   0.7318   0.7731   0.8023   0.8207
+2026-02-20 14:54:34,201 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-20 14:54:34,211 - INFO - Epoch 3/7
+----------
+2026-02-20 14:54:34,211 - INFO - Model is training on: cuda
+2026-02-20 15:48:47,747 - INFO - Train loss 1.4575 acc 0.6761 top1-5  0.6761 0.7751 0.8173 0.8427 0.8600
+2026-02-20 15:48:47,747 - INFO - Val   loss 1.6464   acc 0.6568   top1-5  0.6568   0.7523   0.7938   0.8163   0.8340
+2026-02-20 15:48:47,747 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 15:48:47,758 - INFO - Epoch 4/7
+----------
+2026-02-20 15:48:47,758 - INFO - Model is training on: cuda
+2026-02-20 16:43:01,240 - INFO - Train loss 1.1826 acc 0.7257 top1-5  0.7257 0.8203 0.8590 0.8812 0.8954
+2026-02-20 16:43:01,240 - INFO - Val   loss 1.6149   acc 0.6629   top1-5  0.6629   0.7579   0.7997   0.8234   0.8390
+2026-02-20 16:43:01,240 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-20 16:43:01,250 - INFO - Epoch 5/7
+----------
+2026-02-20 16:43:01,251 - INFO - Model is training on: cuda
+2026-02-20 17:37:15,049 - INFO - Train loss 0.9533 acc 0.7708 top1-5  0.7708 0.8587 0.8930 0.9118 0.9240
+2026-02-20 17:37:15,049 - INFO - Val   loss 1.6635   acc 0.6725   top1-5  0.6725   0.7630   0.8026   0.8263   0.8424
+2026-02-20 17:37:15,049 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 17:37:15,049 - INFO - Epoch 6/7
+----------
+2026-02-20 17:37:15,049 - INFO - Model is training on: cuda
+2026-02-20 18:31:28,938 - INFO - Train loss 0.7590 acc 0.8097 top1-5  0.8097 0.8915 0.9205 0.9362 0.9461
+2026-02-20 18:31:28,939 - INFO - Val   loss 1.7048   acc 0.6766   top1-5  0.6766   0.7653   0.8031   0.8263   0.8432
+2026-02-20 18:31:28,939 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 18:31:28,939 - INFO - Epoch 7/7
+----------
+2026-02-20 18:31:28,939 - INFO - Model is training on: cuda
+2026-02-20 19:25:43,568 - INFO - Train loss 0.5969 acc 0.8461 top1-5  0.8461 0.9190 0.9434 0.9562 0.9638
+2026-02-20 19:25:43,569 - INFO - Val   loss 1.7899   acc 0.6740   top1-5  0.6740   0.7601   0.7998   0.8225   0.8379
+2026-02-20 19:25:43,569 - INFO - Epoch completed in 54.24 minutes.
+
+2026-02-20 19:25:43,569 - INFO - [EarlyStopping] Stop at epoch 7. Best val_loss=1.614865
+2026-02-20 19:26:51,886 - INFO - Top-1 Accuracy: 0.6629 %
+2026-02-20 19:26:51,887 - INFO - Top-2 Accuracy: 0.7579 %
+2026-02-20 19:26:51,887 - INFO - Top-3 Accuracy: 0.7997 %
+2026-02-20 19:26:51,887 - INFO - Top-4 Accuracy: 0.8234 %
+2026-02-20 19:26:51,887 - INFO - Top-5 Accuracy: 0.8390 %
+2026-02-20 19:26:56,881 - INFO - Memoria liberada tras iteración 1
+2026-02-20 19:26:56,882 - INFO - Iniciando Iteración 2/5 - Seed: 742268813
+2026-02-20 19:26:56,882 - INFO - Model name: DBERT_fft_GOODS_DESCRIPTION_HS04_seed742268813
+2026-02-20 19:27:49,396 - INFO - Training on cuda
+2026-02-20 19:27:50,247 - INFO - Epoch 1/7
+----------
+2026-02-20 19:27:50,247 - INFO - Model is training on: cuda
+2026-02-20 20:22:02,814 - INFO - Train loss 2.9395 acc 0.4655 top1-5  0.4655 0.5582 0.6040 0.6342 0.6568
+2026-02-20 20:22:02,819 - INFO - Val   loss 2.0122   acc 0.5823   top1-5  0.5823   0.6809   0.7291   0.7596   0.7811
+2026-02-20 20:22:02,819 - INFO - Epoch completed in 54.21 minutes.
+
+2026-02-20 20:22:02,833 - INFO - Epoch 2/7
+----------
+2026-02-20 20:22:02,833 - INFO - Model is training on: cuda
+2026-02-20 21:16:15,937 - INFO - Train loss 1.8235 acc 0.6139 top1-5  0.6139 0.7156 0.7617 0.7901 0.8102
+2026-02-20 21:16:15,938 - INFO - Val   loss 1.7376   acc 0.6316   top1-5  0.6316   0.7272   0.7737   0.8016   0.8198
+2026-02-20 21:16:15,938 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-20 21:16:15,948 - INFO - Epoch 3/7
+----------
+2026-02-20 21:16:15,948 - INFO - Model is training on: cuda
+2026-02-20 22:10:29,489 - INFO - Train loss 1.4585 acc 0.6759 top1-5  0.6759 0.7747 0.8171 0.8423 0.8597
+2026-02-20 22:10:29,489 - INFO - Val   loss 1.6441   acc 0.6522   top1-5  0.6522   0.7492   0.7899   0.8163   0.8333
+2026-02-20 22:10:29,489 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 22:10:29,502 - INFO - Epoch 4/7
+----------
+2026-02-20 22:10:29,502 - INFO - Model is training on: cuda
+2026-02-20 23:04:43,392 - INFO - Train loss 1.1852 acc 0.7252 top1-5  0.7252 0.8192 0.8584 0.8802 0.8947
+2026-02-20 23:04:43,393 - INFO - Val   loss 1.6223   acc 0.6660   top1-5  0.6660   0.7570   0.7975   0.8217   0.8393
+2026-02-20 23:04:43,393 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-20 23:04:43,403 - INFO - Epoch 5/7
+----------
+2026-02-20 23:04:43,403 - INFO - Model is training on: cuda
+2026-02-20 23:58:57,972 - INFO - Train loss 0.9557 acc 0.7693 top1-5  0.7693 0.8579 0.8926 0.9119 0.9239
+2026-02-20 23:58:57,972 - INFO - Val   loss 1.6586   acc 0.6697   top1-5  0.6697   0.7618   0.8006   0.8245   0.8389
+2026-02-20 23:58:57,972 - INFO - Epoch completed in 54.24 minutes.
+
+2026-02-20 23:58:57,972 - INFO - Epoch 6/7
+----------
+2026-02-20 23:58:57,972 - INFO - Model is training on: cuda
+2026-02-21 00:53:13,440 - INFO - Train loss 0.7594 acc 0.8100 top1-5  0.8100 0.8919 0.9218 0.9371 0.9466
+2026-02-21 00:53:13,440 - INFO - Val   loss 1.7028   acc 0.6764   top1-5  0.6764   0.7636   0.8007   0.8245   0.8408
+2026-02-21 00:53:13,440 - INFO - Epoch completed in 54.26 minutes.
+
+2026-02-21 00:53:13,440 - INFO - Epoch 7/7
+----------
+2026-02-21 00:53:13,440 - INFO - Model is training on: cuda
+2026-02-21 01:47:27,921 - INFO - Train loss 0.5977 acc 0.8460 top1-5  0.8460 0.9194 0.9434 0.9557 0.9635
+2026-02-21 01:47:27,921 - INFO - Val   loss 1.7980   acc 0.6762   top1-5  0.6762   0.7593   0.7977   0.8202   0.8358
+2026-02-21 01:47:27,921 - INFO - Epoch completed in 54.24 minutes.
+
+2026-02-21 01:47:27,921 - INFO - [EarlyStopping] Stop at epoch 7. Best val_loss=1.622264
+2026-02-21 01:48:36,158 - INFO - Top-1 Accuracy: 0.6660 %
+2026-02-21 01:48:36,158 - INFO - Top-2 Accuracy: 0.7570 %
+2026-02-21 01:48:36,158 - INFO - Top-3 Accuracy: 0.7975 %
+2026-02-21 01:48:36,158 - INFO - Top-4 Accuracy: 0.8217 %
+2026-02-21 01:48:36,158 - INFO - Top-5 Accuracy: 0.8393 %
+2026-02-21 01:48:41,172 - INFO - Memoria liberada tras iteración 2
+2026-02-21 01:48:41,173 - INFO - Iniciando Iteración 3/5 - Seed: 724791594
+2026-02-21 01:48:41,173 - INFO - Model name: DBERT_fft_GOODS_DESCRIPTION_HS04_seed724791594
+2026-02-21 01:49:33,486 - INFO - Training on cuda
+2026-02-21 01:49:33,636 - INFO - Epoch 1/7
+----------
+2026-02-21 01:49:33,636 - INFO - Model is training on: cuda
+2026-02-21 02:43:45,878 - INFO - Train loss 2.9437 acc 0.4661 top1-5  0.4661 0.5588 0.6044 0.6349 0.6573
+2026-02-21 02:43:45,878 - INFO - Val   loss 2.0373   acc 0.5803   top1-5  0.5803   0.6791   0.7253   0.7523   0.7758
+2026-02-21 02:43:45,878 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 02:43:45,888 - INFO - Epoch 2/7
+----------
+2026-02-21 02:43:45,888 - INFO - Model is training on: cuda
+2026-02-21 03:37:57,769 - INFO - Train loss 1.8245 acc 0.6150 top1-5  0.6150 0.7160 0.7621 0.7901 0.8099
+2026-02-21 03:37:57,769 - INFO - Val   loss 1.7539   acc 0.6297   top1-5  0.6297   0.7272   0.7716   0.7977   0.8173
+2026-02-21 03:37:57,769 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 03:37:57,779 - INFO - Epoch 3/7
+----------
+2026-02-21 03:37:57,780 - INFO - Model is training on: cuda
+2026-02-21 04:32:11,010 - INFO - Train loss 1.4552 acc 0.6763 top1-5  0.6763 0.7752 0.8178 0.8424 0.8599
+2026-02-21 04:32:11,010 - INFO - Val   loss 1.6578   acc 0.6510   top1-5  0.6510   0.7473   0.7884   0.8146   0.8322
+2026-02-21 04:32:11,011 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-21 04:32:11,021 - INFO - Epoch 4/7
+----------
+2026-02-21 04:32:11,021 - INFO - Model is training on: cuda
+2026-02-21 05:26:23,922 - INFO - Train loss 1.1858 acc 0.7257 top1-5  0.7257 0.8198 0.8580 0.8804 0.8947
+2026-02-21 05:26:23,922 - INFO - Val   loss 1.6373   acc 0.6623   top1-5  0.6623   0.7536   0.7946   0.8198   0.8374
+2026-02-21 05:26:23,922 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-21 05:26:23,934 - INFO - Epoch 5/7
+----------
+2026-02-21 05:26:23,934 - INFO - Model is training on: cuda
+2026-02-21 06:20:38,056 - INFO - Train loss 0.9551 acc 0.7706 top1-5  0.7706 0.8592 0.8926 0.9114 0.9235
+2026-02-21 06:20:38,057 - INFO - Val   loss 1.6678   acc 0.6673   top1-5  0.6673   0.7579   0.7987   0.8240   0.8393
+2026-02-21 06:20:38,057 - INFO - Epoch completed in 54.24 minutes.
+
+2026-02-21 06:20:38,057 - INFO - Epoch 6/7
+----------
+2026-02-21 06:20:38,057 - INFO - Model is training on: cuda
+2026-02-21 07:14:52,086 - INFO - Train loss 0.7603 acc 0.8110 top1-5  0.8110 0.8915 0.9208 0.9364 0.9457
+2026-02-21 07:14:52,086 - INFO - Val   loss 1.7241   acc 0.6701   top1-5  0.6701   0.7597   0.7978   0.8214   0.8376
+2026-02-21 07:14:52,086 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-21 07:14:52,087 - INFO - Epoch 7/7
+----------
+2026-02-21 07:14:52,087 - INFO - Model is training on: cuda
+2026-02-21 08:09:06,615 - INFO - Train loss 0.6001 acc 0.8451 top1-5  0.8451 0.9189 0.9435 0.9559 0.9632
+2026-02-21 08:09:06,616 - INFO - Val   loss 1.8036   acc 0.6751   top1-5  0.6751   0.7588   0.7971   0.8193   0.8359
+2026-02-21 08:09:06,616 - INFO - Epoch completed in 54.24 minutes.
+
+2026-02-21 08:09:06,616 - INFO - [EarlyStopping] Stop at epoch 7. Best val_loss=1.637323
+2026-02-21 08:10:14,967 - INFO - Top-1 Accuracy: 0.6623 %
+2026-02-21 08:10:14,968 - INFO - Top-2 Accuracy: 0.7536 %
+2026-02-21 08:10:14,968 - INFO - Top-3 Accuracy: 0.7946 %
+2026-02-21 08:10:14,968 - INFO - Top-4 Accuracy: 0.8198 %
+2026-02-21 08:10:14,968 - INFO - Top-5 Accuracy: 0.8374 %
+2026-02-21 08:10:19,966 - INFO - Memoria liberada tras iteración 3
+2026-02-21 08:10:19,967 - INFO - Iniciando Iteración 4/5 - Seed: 691504352
+2026-02-21 08:10:19,967 - INFO - Model name: DBERT_fft_GOODS_DESCRIPTION_HS04_seed691504352
+2026-02-21 08:11:12,369 - INFO - Training on cuda
+2026-02-21 08:11:12,462 - INFO - Epoch 1/7
+----------
+2026-02-21 08:11:12,462 - INFO - Model is training on: cuda
+2026-02-21 09:05:25,306 - INFO - Train loss 2.9418 acc 0.4657 top1-5  0.4657 0.5584 0.6044 0.6351 0.6572
+2026-02-21 09:05:25,306 - INFO - Val   loss 2.0283   acc 0.5829   top1-5  0.5829   0.6842   0.7305   0.7565   0.7784
+2026-02-21 09:05:25,306 - INFO - Epoch completed in 54.21 minutes.
+
+2026-02-21 09:05:25,316 - INFO - Epoch 2/7
+----------
+2026-02-21 09:05:25,317 - INFO - Model is training on: cuda
+2026-02-21 09:59:36,650 - INFO - Train loss 1.8285 acc 0.6124 top1-5  0.6124 0.7146 0.7611 0.7895 0.8091
+2026-02-21 09:59:36,650 - INFO - Val   loss 1.7443   acc 0.6317   top1-5  0.6317   0.7302   0.7739   0.8010   0.8198
+2026-02-21 09:59:36,650 - INFO - Epoch completed in 54.19 minutes.
+
+2026-02-21 09:59:36,661 - INFO - Epoch 3/7
+----------
+2026-02-21 09:59:36,661 - INFO - Model is training on: cuda
+2026-02-21 10:53:48,716 - INFO - Train loss 1.4592 acc 0.6751 top1-5  0.6751 0.7742 0.8170 0.8420 0.8590
+2026-02-21 10:53:48,716 - INFO - Val   loss 1.6529   acc 0.6533   top1-5  0.6533   0.7462   0.7915   0.8154   0.8331
+2026-02-21 10:53:48,716 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 10:53:48,727 - INFO - Epoch 4/7
+----------
+2026-02-21 10:53:48,727 - INFO - Model is training on: cuda
+2026-02-21 11:48:01,592 - INFO - Train loss 1.1852 acc 0.7243 top1-5  0.7243 0.8201 0.8587 0.8808 0.8955
+2026-02-21 11:48:01,592 - INFO - Val   loss 1.6396   acc 0.6631   top1-5  0.6631   0.7538   0.7983   0.8241   0.8405
+2026-02-21 11:48:01,592 - INFO - Epoch completed in 54.21 minutes.
+
+2026-02-21 11:48:01,607 - INFO - Epoch 5/7
+----------
+2026-02-21 11:48:01,607 - INFO - Model is training on: cuda
+2026-02-21 12:42:15,322 - INFO - Train loss 0.9570 acc 0.7688 top1-5  0.7688 0.8578 0.8927 0.9113 0.9237
+2026-02-21 12:42:15,322 - INFO - Val   loss 1.6661   acc 0.6709   top1-5  0.6709   0.7582   0.8002   0.8251   0.8422
+2026-02-21 12:42:15,322 - INFO - Epoch completed in 54.23 minutes.
+
+2026-02-21 12:42:15,322 - INFO - Epoch 6/7
+----------
+2026-02-21 12:42:15,322 - INFO - Model is training on: cuda
+2026-02-21 13:36:28,519 - INFO - Train loss 0.7577 acc 0.8108 top1-5  0.8108 0.8915 0.9211 0.9366 0.9466
+2026-02-21 13:36:28,519 - INFO - Val   loss 1.7242   acc 0.6748   top1-5  0.6748   0.7608   0.8010   0.8231   0.8412
+2026-02-21 13:36:28,519 - INFO - Epoch completed in 54.22 minutes.
+
+2026-02-21 13:36:28,519 - INFO - Epoch 7/7
+----------
+2026-02-21 13:36:28,519 - INFO - Model is training on: cuda
+2026-02-21 14:30:40,721 - INFO - Train loss 0.5983 acc 0.8453 top1-5  0.8453 0.9196 0.9439 0.9563 0.9637
+2026-02-21 14:30:40,721 - INFO - Val   loss 1.8019   acc 0.6722   top1-5  0.6722   0.7573   0.7981   0.8234   0.8376
+2026-02-21 14:30:40,721 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 14:30:40,721 - INFO - [EarlyStopping] Stop at epoch 7. Best val_loss=1.639618
+2026-02-21 14:31:49,048 - INFO - Top-1 Accuracy: 0.6631 %
+2026-02-21 14:31:49,048 - INFO - Top-2 Accuracy: 0.7538 %
+2026-02-21 14:31:49,048 - INFO - Top-3 Accuracy: 0.7983 %
+2026-02-21 14:31:49,048 - INFO - Top-4 Accuracy: 0.8241 %
+2026-02-21 14:31:49,048 - INFO - Top-5 Accuracy: 0.8405 %
+2026-02-21 14:31:54,120 - INFO - Memoria liberada tras iteración 4
+2026-02-21 14:31:54,121 - INFO - Iniciando Iteración 5/5 - Seed: 125430804
+2026-02-21 14:31:54,121 - INFO - Model name: DBERT_fft_GOODS_DESCRIPTION_HS04_seed125430804
+2026-02-21 14:32:46,832 - INFO - Training on cuda
+2026-02-21 14:32:46,924 - INFO - Epoch 1/7
+----------
+2026-02-21 14:32:46,924 - INFO - Model is training on: cuda
+2026-02-21 15:26:57,950 - INFO - Train loss 2.9206 acc 0.4674 top1-5  0.4674 0.5610 0.6075 0.6382 0.6605
+2026-02-21 15:26:57,951 - INFO - Val   loss 2.0180   acc 0.5837   top1-5  0.5837   0.6834   0.7327   0.7603   0.7803
+2026-02-21 15:26:57,951 - INFO - Epoch completed in 54.18 minutes.
+
+2026-02-21 15:26:57,961 - INFO - Epoch 2/7
+----------
+2026-02-21 15:26:57,961 - INFO - Model is training on: cuda
+2026-02-21 16:21:09,982 - INFO - Train loss 1.8214 acc 0.6144 top1-5  0.6144 0.7163 0.7629 0.7910 0.8102
+2026-02-21 16:21:09,982 - INFO - Val   loss 1.7522   acc 0.6298   top1-5  0.6298   0.7313   0.7753   0.8017   0.8198
+2026-02-21 16:21:09,982 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 16:21:09,997 - INFO - Epoch 3/7
+----------
+2026-02-21 16:21:09,997 - INFO - Model is training on: cuda
+2026-02-21 17:15:22,275 - INFO - Train loss 1.4523 acc 0.6770 top1-5  0.6770 0.7752 0.8173 0.8426 0.8601
+2026-02-21 17:15:22,275 - INFO - Val   loss 1.6760   acc 0.6505   top1-5  0.6505   0.7486   0.7889   0.8135   0.8329
+2026-02-21 17:15:22,275 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 17:15:22,285 - INFO - Epoch 4/7
+----------
+2026-02-21 17:15:22,285 - INFO - Model is training on: cuda
+2026-02-21 18:09:34,916 - INFO - Train loss 1.1802 acc 0.7253 top1-5  0.7253 0.8203 0.8592 0.8809 0.8958
+2026-02-21 18:09:34,916 - INFO - Val   loss 1.6383   acc 0.6644   top1-5  0.6644   0.7542   0.7977   0.8219   0.8380
+2026-02-21 18:09:34,916 - INFO - Epoch completed in 54.21 minutes.
+
+2026-02-21 18:09:34,931 - INFO - Epoch 5/7
+----------
+2026-02-21 18:09:34,931 - INFO - Model is training on: cuda
+2026-02-21 19:03:47,768 - INFO - Train loss 0.9502 acc 0.7703 top1-5  0.7703 0.8588 0.8928 0.9120 0.9242
+2026-02-21 19:03:47,768 - INFO - Val   loss 1.6867   acc 0.6660   top1-5  0.6660   0.7588   0.7975   0.8238   0.8402
+2026-02-21 19:03:47,768 - INFO - Epoch completed in 54.21 minutes.
+
+2026-02-21 19:03:47,768 - INFO - Epoch 6/7
+----------
+2026-02-21 19:03:47,768 - INFO - Model is training on: cuda
+2026-02-21 19:57:59,625 - INFO - Train loss 0.7557 acc 0.8101 top1-5  0.8101 0.8923 0.9214 0.9370 0.9468
+2026-02-21 19:57:59,626 - INFO - Val   loss 1.7171   acc 0.6736   top1-5  0.6736   0.7582   0.8001   0.8234   0.8394
+2026-02-21 19:57:59,626 - INFO - Epoch completed in 54.20 minutes.
+
+2026-02-21 19:57:59,626 - INFO - Epoch 7/7
+----------
+2026-02-21 19:57:59,626 - INFO - Model is training on: cuda
+2026-02-21 20:52:11,243 - INFO - Train loss 0.5921 acc 0.8469 top1-5  0.8469 0.9197 0.9445 0.9569 0.9644
+2026-02-21 20:52:11,243 - INFO - Val   loss 1.8059   acc 0.6716   top1-5  0.6716   0.7623   0.8005   0.8237   0.8405
+2026-02-21 20:52:11,243 - INFO - Epoch completed in 54.19 minutes.
+
+2026-02-21 20:52:11,244 - INFO - [EarlyStopping] Stop at epoch 7. Best val_loss=1.638293
+2026-02-21 20:53:19,400 - INFO - Top-1 Accuracy: 0.6644 %
+2026-02-21 20:53:19,400 - INFO - Top-2 Accuracy: 0.7542 %
+2026-02-21 20:53:19,400 - INFO - Top-3 Accuracy: 0.7977 %
+2026-02-21 20:53:19,400 - INFO - Top-4 Accuracy: 0.8219 %
+2026-02-21 20:53:19,400 - INFO - Top-5 Accuracy: 0.8380 %
+2026-02-21 20:53:24,516 - INFO - Memoria liberada tras iteración 5
+2026-02-21 20:53:24,533 - INFO - Saved metrics to results/metrics_fft_GOODS_DESCRIPTION_HS04.csv
+2026-02-21 20:53:24,536 - INFO - Historial guardado en results/history_all_iters_fft.csv
+2026-02-21 20:53:25,086 - INFO - Gráficos de entrenamiento generados.
+2026-02-21 20:53:25,117 - INFO - Subiendo resultados a gs://distiltbert-train/experiments/job_fft_v11
