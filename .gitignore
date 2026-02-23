@@ -8,3 +8,5 @@ good_desc_embs_labels.npz
 
 gcp/gcp_task.egg-info/
 data/
+
+*.bin
