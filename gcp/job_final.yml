@@ -1,0 +1,25 @@
+workerPoolSpecs:
+  - machineSpec:
+      machineType: g2-standard-4
+      acceleratorType: NVIDIA_L4
+      acceleratorCount: 1
+    replicaCount: 1
+
+    containerSpec:
+      imageUri: us-central1-docker.pkg.dev/hsclassi/model-training-repo/hs-classifier:v11-final
+      args:
+        - --data_path=gs://distiltbert-train/data/raw_data_HScodes_desc.txt
+        - --output_bucket=distiltbert-train
+        - --job_dir=experiments/final_train_v11
+        - --train_type=fft
+        - --max_epochs=5
+        - --num_workers=2
+        - --batch_size=128
+        - --lr=5e-5
+        - --test_fraction=0.01
+        - --seed=32
+        - --final
+
+scheduling:
+  strategy: FLEX_START
+  maxWaitDuration: 7200s

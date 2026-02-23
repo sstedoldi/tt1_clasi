@@ -627,7 +627,7 @@ def iterative_training(
             if verbose:
                 logger.info(f"Epoch completed in {epoch_time/60:.2f} minutes.\n")
 
-            # ---- EARLY STOPPING DECISION ----
+            #- EARLY STOPPING DECISION-
             if es is not None:
                 current = {
                     "val_loss": val_loss,
@@ -715,3 +715,278 @@ def iterative_training(
     final_scored_dfs = {k: v['results'] for k, v in scored_dfs.items()}
 
     return final_scored_dfs, metrics_df
+
+
+def training(
+    *,
+    train_type: str,
+    text_col: str,
+    target_col: str,
+    df: pd.DataFrame,
+    tokenizer,
+    out_dir: str,
+    label_dir: str,
+    max_length: int = 300,
+    batch_size: int = 128,
+    lr: float = 5e-5,
+    test_fraction: float = 0.01,
+    seed: int = 32,
+    max_epochs: int = 10,
+    early_stopping: bool = True,
+    monitor: str = "val_loss",
+    patience: int = 3,
+    min_delta: float = 0.0,
+    warmup_epochs: int = 1,
+    fine_tune: bool = True,
+    n_finetune_layers: int = 0,
+    shuffle: bool = True,
+    val_shuffle: bool = False,
+    num_workers: int = 0,
+    device: Optional[torch.device] = None,
+    verbose: bool = True,
+) -> Dict[str, object]:
+    """
+    Single training run:
+      - 1 train/val split (val is 'test_fraction')
+      - trains up to max_epochs (optional early stopping)
+      - restores best epoch
+      - evaluates on val
+      - saves checkpoint + labels + metrics + history + val predictions
+    Returns dict with paths + metrics.
+    """
+
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(label_dir, exist_ok=True)
+
+    seed_everything(seed, deterministic=False)
+
+    # Split
+    train_df, val_df = sampling(df, test_fraction=test_fraction, seed=seed, replace=False)
+
+    # Label mappings (from full df, deterministic)
+    unique_labels = sorted(df[target_col].astype(str).unique().tolist())
+    label2id = {label: idx for idx, label in enumerate(unique_labels)}
+    id2label = {idx: label for label, idx in label2id.items()}
+
+    # Tokenize
+    train_encodings = tokenizer(
+        list(train_df[text_col]),
+        truncation=True,
+        padding="max_length",
+        max_length=max_length,
+        return_tensors="pt",
+    )
+    train_labels = torch.tensor([label2id[str(lbl)] for lbl in train_df[target_col].astype(str)])
+
+    val_encodings = tokenizer(
+        list(val_df[text_col]),
+        truncation=True,
+        padding="max_length",
+        max_length=max_length,
+        return_tensors="pt",
+    )
+    val_labels = torch.tensor([label2id[str(lbl)] for lbl in val_df[target_col].astype(str)])
+
+    train_dataset = TokenizedDataset(train_encodings, train_labels)
+    val_dataset = TokenizedDataset(val_encodings, val_labels)
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=val_shuffle,
+        num_workers=num_workers,
+    )
+
+    # Save labels dict
+    run_name = f"FINAL_DBERT_{train_type}_{text_col}_{target_col}_seed{seed}"
+    labels_dict = {"label2id": label2id, "id2label": id2label}
+    labels_path = os.path.join(label_dir, f"labels_dict_{run_name}.json")
+    with open(labels_path, "w") as f:
+        json.dump(labels_dict, f, indent=4, ensure_ascii=False)
+
+    # Model
+    model = HSClassifier(
+        n_classes=len(label2id),
+        fine_tune=fine_tune,
+        n_finetune_layers=n_finetune_layers,
+    )
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"[FINAL] Training on {device}")
+    model = model.to(device)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    history = {
+        "train_loss": [],
+        "train_acc": [],
+        "train_top1_acc": [],
+        "train_top2_acc": [],
+        "train_top3_acc": [],
+        "train_top4_acc": [],
+        "train_top5_acc": [],
+        "val_loss": [],
+        "val_acc": [],
+        "val_top1_acc": [],
+        "val_top2_acc": [],
+        "val_top3_acc": [],
+        "val_top4_acc": [],
+        "val_top5_acc": [],
+    }
+
+    if monitor == "val_loss":
+        es_mode = "min"
+    elif monitor in ("val_acc", "val_top5_acc"):
+        es_mode = "max"
+    else:
+        raise ValueError(f"Unknown monitor={monitor}")
+
+    es = EarlyStopping(
+        patience=patience,
+        min_delta=min_delta,
+        mode=es_mode,
+        warmup_epochs=warmup_epochs,
+        restore_best=True,
+    ) if early_stopping else None
+
+    # Train loop
+    for epoch in range(max_epochs):
+        if verbose:
+            logger.info(f"[FINAL] Epoch {epoch + 1}/{max_epochs}\n" + "-" * 10)
+
+        start_time = time.time()
+
+        train_acc, train_top1_acc, train_top2_acc, train_top3_acc, train_top4_acc, train_top5_acc, train_loss = train_epoch(
+            model, train_loader, criterion, optimizer, device, verbose=verbose
+        )
+        val_acc, val_top1_acc, val_top2_acc, val_top3_acc, val_top4_acc, val_top5_acc, val_loss = eval_model(
+            model, val_loader, criterion, device
+        )
+
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
+        history["train_top1_acc"].append(train_top1_acc)
+        history["train_top2_acc"].append(train_top2_acc)
+        history["train_top3_acc"].append(train_top3_acc)
+        history["train_top4_acc"].append(train_top4_acc)
+        history["train_top5_acc"].append(train_top5_acc)
+
+        history["val_loss"].append(val_loss)
+        history["val_acc"].append(val_acc)
+        history["val_top1_acc"].append(val_top1_acc)
+        history["val_top2_acc"].append(val_top2_acc)
+        history["val_top3_acc"].append(val_top3_acc)
+        history["val_top4_acc"].append(val_top4_acc)
+        history["val_top5_acc"].append(val_top5_acc)
+
+        if verbose:
+            logger.info(
+                f"[FINAL] Train loss {train_loss:.4f} acc {train_acc:.4f} top1-5 "
+                f"{train_top1_acc:.4f} {train_top2_acc:.4f} {train_top3_acc:.4f} {train_top4_acc:.4f} {train_top5_acc:.4f}"
+            )
+            logger.info(
+                f"[FINAL] Val   loss {val_loss:.4f}   acc {val_acc:.4f}   top1-5 "
+                f"{val_top1_acc:.4f} {val_top2_acc:.4f} {val_top3_acc:.4f} {val_top4_acc:.4f} {val_top5_acc:.4f}"
+            )
+
+        epoch_time = time.time() - start_time
+        if verbose:
+            logger.info(f"[FINAL] Epoch completed in {epoch_time/60:.2f} minutes.\n")
+
+        # Early stopping
+        if es is not None:
+            current = {
+                "val_loss": val_loss,
+                "val_acc": val_acc,
+                "val_top5_acc": val_top5_acc,
+            }[monitor]
+
+            if es.step(current, model):
+                logger.info(
+                    f"[FINAL][EarlyStopping] Stop at epoch {epoch+1}. Best {monitor}={es.best_score:.6f}"
+                )
+                break
+
+    if es is not None:
+        es.restore(model)
+
+    # Evaluate on val_df with top5 predictions
+    results_df, metrics = predict_and_evaluate(
+        model=model,
+        tokenizer=tokenizer,
+        unseen_sample=val_df,
+        id2label=id2label,
+        max_length=max_length,
+        device=device,
+        batch_size=batch_size,
+    )
+
+    # Save artifacts locally
+    # checkpoint
+    ckpt_dir = os.path.join(out_dir, "final_model")
+    os.makedirs(ckpt_dir, exist_ok=True)
+
+    ckpt_path = os.path.join(ckpt_dir, "pytorch_model.bin")
+    torch.save(model.state_dict(), ckpt_path)
+
+    # training config
+    config = {
+        "run_name": run_name,
+        "train_type": train_type,
+        "text_col": text_col,
+        "target_col": target_col,
+        "max_length": max_length,
+        "batch_size": batch_size,
+        "lr": lr,
+        "test_fraction": test_fraction,
+        "seed": seed,
+        "max_epochs": max_epochs,
+        "early_stopping": early_stopping,
+        "monitor": monitor,
+        "patience": patience,
+        "min_delta": min_delta,
+        "warmup_epochs": warmup_epochs,
+        "fine_tune": fine_tune,
+        "n_finetune_layers": n_finetune_layers,
+    }
+    config_path = os.path.join(ckpt_dir, "training_config.json")
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4, ensure_ascii=False)
+
+    # metrics
+    metrics_path = os.path.join(out_dir, "final_metrics.json")
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f, indent=4, ensure_ascii=False)
+
+    # history
+    history_path = os.path.join(out_dir, "final_history.json")
+    with open(history_path, "w") as f:
+        json.dump(history, f, indent=4, ensure_ascii=False)
+
+    # val predictions
+    preds_path = os.path.join(out_dir, "final_val_predictions.csv")
+    results_df.to_csv(preds_path, index=True)
+
+    # Cleanup
+    del model, optimizer, train_encodings, val_encodings, train_dataset, val_dataset, train_loader, val_loader
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    return {
+        "run_name": run_name,
+        "labels_path": labels_path,
+        "ckpt_path": ckpt_path,
+        "config_path": config_path,
+        "metrics_path": metrics_path,
+        "history_path": history_path,
+        "preds_path": preds_path,
+        "metrics": metrics,
+    }

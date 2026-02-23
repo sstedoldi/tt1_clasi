@@ -133,32 +133,58 @@ def main(args):
     logger.info(f"Fine Tune: {fine_tune}, Layers: {n_finetune_layers}")
 
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+    logger.info("=== Iniciando Entrenamiento ===")
 
-    # Iterative Training
-    logger.info("=== Iniciando Entrenamiento Iterativo ===")
-    distilbert_utils.iterative_training(
-        train_type=args.train_type,
-        text_col='GOODS_DESCRIPTION',   # Fijo
-        target_col='HS04',              # Fijo
-        iterations=args.iterations,
-        max_epochs=args.max_epochs,
-        max_length=args.max_length,
-        loader_batch_size=args.batch_size,
-        shuffle=True,
-        lr=args.lr,
-        fraction=args.test_fraction,
-        bootstrap=args.bootstrap,
-        out_dir=out_dir,
-        df=df,
-        tokenizer=tokenizer,
-        label_dir=label_dir,
-        fine_tune=fine_tune,
-        n_finetune_layers=n_finetune_layers,
-        patience=3,           
-        monitor="val_loss",     
-        num_workers=args.num_workers,
-        verbose=True
-    )
+    if args.final:
+        logger.info("=== MODO FINAL: single run ===")
+        distilbert_utils.training(
+            train_type=args.train_type,
+            text_col="GOODS_DESCRIPTION",
+            target_col="HS04",
+            df=df,
+            tokenizer=tokenizer,
+            out_dir=out_dir,
+            label_dir=label_dir,
+            max_length=args.max_length,
+            batch_size=args.batch_size,
+            lr=args.lr,
+            test_fraction=args.test_fraction,  # set to 0.01 in job
+            seed=args.seed,
+            max_epochs=args.max_epochs,
+            early_stopping=True,
+            monitor="val_loss",
+            patience=3,
+            warmup_epochs=1,
+            fine_tune=fine_tune,
+            n_finetune_layers=n_finetune_layers,
+            num_workers=args.num_workers,
+            verbose=True,
+        )
+    else:
+        logger.info("=== MODO ITERATIVO ===")
+        distilbert_utils.iterative_training(
+            train_type=args.train_type,
+            text_col='GOODS_DESCRIPTION',
+            target_col='HS04',
+            iterations=args.iterations,
+            max_epochs=args.max_epochs,
+            max_length=args.max_length,
+            loader_batch_size=args.batch_size,
+            shuffle=True,
+            lr=args.lr,
+            fraction=args.test_fraction,
+            bootstrap=args.bootstrap,
+            out_dir=out_dir,
+            df=df,
+            tokenizer=tokenizer,
+            label_dir=label_dir,
+            fine_tune=fine_tune,
+            n_finetune_layers=n_finetune_layers,
+            patience=3,
+            monitor="val_loss",
+            num_workers=args.num_workers,
+            verbose=True
+        )
 
     # Saving results GCS into args.job_dir
     upload_directory(out_dir, args.output_bucket, args.job_dir, logger)
@@ -182,12 +208,19 @@ if __name__ == "__main__":
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--test_fraction', type=float, default=0.05) # 5% test
     parser.add_argument('--sample_frac', type=float, default=1.0)   # 1.0 = 100% data
+    parser.add_argument("--seed", type=int, default=32)
     parser.add_argument(
         '--bootstrap', 
         action=argparse.BooleanOptionalAction, 
         default=True,
         help="Usa --bootstrap para activar o --no-bootstrap para desactivar"
         )
+    parser.add_argument(
+    "--final",
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help="Use --final for a single definitive training run (no iterations)."
+    )
     
     args = parser.parse_args()
     main(args)

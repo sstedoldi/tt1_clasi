@@ -1,0 +1,51 @@
+2026-02-23 02:00:52,716 - INFO - === Iniciando Tarea en GCP ===
+2026-02-23 02:00:52,716 - INFO - Archivo de log local: results/training_execution.log
+2026-02-23 02:00:52,716 - INFO - Descargando gs://distiltbert-train/data/raw_data_HScodes_desc.txt -> data/dataset.txt
+2026-02-23 02:00:55,108 - INFO - === Cargando datos desde data/dataset.txt ===
+2026-02-23 02:00:58,451 - INFO - Dataset final: (267780, 3) filas.
+2026-02-23 02:00:58,451 - INFO - === Configuración: FFT ===
+2026-02-23 02:00:58,451 - INFO - Fine Tune: True, Layers: 0
+2026-02-23 02:01:01,359 - INFO - === Iniciando Entrenamiento ===
+2026-02-23 02:01:01,359 - INFO - === MODO FINAL: single run ===
+2026-02-23 02:02:24,740 - INFO - [FINAL] Training on cuda
+2026-02-23 02:02:25,786 - INFO - [FINAL] Epoch 1/5
+----------
+2026-02-23 02:02:25,786 - INFO - Model is training on: cuda
+2026-02-23 02:56:29,139 - INFO - [FINAL] Train loss 2.9117 acc 0.4687 top1-5 0.4687 0.5614 0.6080 0.6382 0.6602
+2026-02-23 02:56:29,140 - INFO - [FINAL] Val   loss 2.0114   acc 0.5861   top1-5 0.5861 0.6836 0.7303 0.7606 0.7789
+2026-02-23 02:56:29,140 - INFO - [FINAL] Epoch completed in 54.06 minutes.
+
+2026-02-23 02:56:29,162 - INFO - [FINAL] Epoch 2/5
+----------
+2026-02-23 02:56:29,162 - INFO - Model is training on: cuda
+2026-02-23 03:50:28,173 - INFO - [FINAL] Train loss 1.8044 acc 0.6165 top1-5 0.6165 0.7183 0.7647 0.7931 0.8126
+2026-02-23 03:50:28,173 - INFO - [FINAL] Val   loss 1.7486   acc 0.6391   top1-5 0.6391 0.7363 0.7747 0.7968 0.8110
+2026-02-23 03:50:28,173 - INFO - [FINAL] Epoch completed in 53.98 minutes.
+
+2026-02-23 03:50:28,190 - INFO - [FINAL] Epoch 3/5
+----------
+2026-02-23 03:50:28,190 - INFO - Model is training on: cuda
+2026-02-23 04:44:27,210 - INFO - [FINAL] Train loss 1.4405 acc 0.6782 top1-5 0.6782 0.7769 0.8195 0.8445 0.8619
+2026-02-23 04:44:27,210 - INFO - [FINAL] Val   loss 1.6580   acc 0.6582   top1-5 0.6582 0.7467 0.7848 0.8084 0.8267
+2026-02-23 04:44:27,210 - INFO - [FINAL] Epoch completed in 53.98 minutes.
+
+2026-02-23 04:44:27,226 - INFO - [FINAL] Epoch 4/5
+----------
+2026-02-23 04:44:27,227 - INFO - Model is training on: cuda
+2026-02-23 05:38:24,439 - INFO - [FINAL] Train loss 1.1726 acc 0.7277 top1-5 0.7277 0.8220 0.8605 0.8823 0.8967
+2026-02-23 05:38:24,440 - INFO - [FINAL] Val   loss 1.6246   acc 0.6672   top1-5 0.6672 0.7546 0.7968 0.8203 0.8383
+2026-02-23 05:38:24,440 - INFO - [FINAL] Epoch completed in 53.95 minutes.
+
+2026-02-23 05:38:24,450 - INFO - [FINAL] Epoch 5/5
+----------
+2026-02-23 05:38:24,450 - INFO - Model is training on: cuda
+2026-02-23 06:32:22,481 - INFO - [FINAL] Train loss 0.9464 acc 0.7705 top1-5 0.7705 0.8594 0.8937 0.9126 0.9251
+2026-02-23 06:32:22,481 - INFO - [FINAL] Val   loss 1.6694   acc 0.6649   top1-5 0.6649 0.7572 0.8009 0.8274 0.8416
+2026-02-23 06:32:22,482 - INFO - [FINAL] Epoch completed in 53.97 minutes.
+
+2026-02-23 06:32:35,858 - INFO - Top-1 Accuracy: 0.6672 %
+2026-02-23 06:32:35,858 - INFO - Top-2 Accuracy: 0.7546 %
+2026-02-23 06:32:35,858 - INFO - Top-3 Accuracy: 0.7968 %
+2026-02-23 06:32:35,858 - INFO - Top-4 Accuracy: 0.8203 %
+2026-02-23 06:32:35,858 - INFO - Top-5 Accuracy: 0.8383 %
+2026-02-23 06:32:41,476 - INFO - Subiendo resultados a gs://distiltbert-train/experiments/final_train_v11
