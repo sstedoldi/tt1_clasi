@@ -1,4 +1,0 @@
-model_name,n_samples,iteration,top_1_acc,top_2_acc,top_3_acc,top_4_acc,top_5_acc
-DBERT_FFT,8,0,0.625,0.625,0.75,1.0,1.0
-GenAI_gpt-5-nano,8,0,1.0,1.0,1.0,1.0,1.0
-DBERT_FFT+GenAI_gpt-5-nano,8,0,1.0,1.0,1.0,1.0,1.0
