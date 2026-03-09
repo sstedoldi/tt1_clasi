@@ -12,3 +12,5 @@ data/
 results/distilbert/**/final_model/*.bin
 results/**/pytorch_model.bin
 
+tmp/
+
