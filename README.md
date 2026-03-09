@@ -6,7 +6,6 @@ El proyecto evoluciona hacia la tesis de la **Maestría en Explotación de Datos
 
 ## Contenido del repositorio
 
-- **`data/`**: fuentes principales de datos, incluyendo el corpus de descripciones comerciales, la nomenclatura HS y derivados utilizados para EDA y entrenamiento. Contiene particiones predefinidas (`train_data/`, `test_data/`) y tablas auxiliares con features agregados.
 - **`docs/`**: material de referencia (papers, presentaciones y notas) utilizado para contextualizar el problema y documentar avances académicos.
 - **`eda/`**: artefactos y perfiles exploratorios generados durante el análisis de datos.
 - **`sample_data/`**: muestras reducidas para comprender la estructura de los códigos HS y ensayar pipelines en un entorno liviano.
