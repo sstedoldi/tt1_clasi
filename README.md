@@ -1,95 +1,164 @@
-# Clasificación Arancelaria con NLP
+# Clasificación arancelaria con procesamiento de lenguaje natural
 
-Este repositorio recopila el trabajo de taller de tesis de la maestría de **Maestría en Explotación de Datos y Generación del Conocimiento (UBA)** orientado a la clasificación arancelaria de mercaderías a partir de descripciones comerciales en texto libre. El objetivo inicial fue validar la factibilidad de entrenar modelos basados en *transformers* para recomendar códigos de la nomenclatura armonizada (HS) a nivel de partida (HS04), a pesar de contar con un dataset altamente desbalanceado y con miles de clases.
+Repositorio de la tesis de la **Maestría en Explotación de Datos y Descubrimiento de Conocimiento (UBA)** de Santiago S. Tedoldi, dirigida por el Dr. Bruno Bianchi.
 
-El proyecto evoluciona hacia la tesis de la **Maestría en Explotación de Datos y Generación del Conocimiento (UBA)**, donde se ampliará la batería de modelos, el análisis de errores y la capacidad de explicar las predicciones.
+El proyecto estudia la recomendación asistida de partidas arancelarias **HS04** a partir de descripciones comerciales en texto libre. Compara baselines basados en Doc2Vec y FastText con distintas estrategias de ajuste de DistilBERT, y complementa la evaluación Top-K con análisis de error, explicabilidad y scoring de confianza.
 
-## Contenido del repositorio
+> La herramienta está planteada como apoyo a la decisión: propone un conjunto acotado de códigos candidatos y señales de confianza para priorizar la revisión humana. No reemplaza el criterio de un especialista ni las reglas legales de clasificación.
 
-- **`docs/`**: material de referencia (papers, presentaciones y notas) utilizado para contextualizar el problema y documentar avances académicos.
-- **`eda/`**: artefactos y perfiles exploratorios generados durante el análisis de datos.
-- **`sample_data/`**: muestras reducidas para comprender la estructura de los códigos HS y ensayar pipelines en un entorno liviano.
-- **`deployment/`**: prototipos de inferencia, incluyendo un predictor Doc2Vec temprano (`HscodePredict.py`) y notebooks de despliegue.
-- **`results/`**: visualizaciones interactivas (PCA, t-SNE) y métricas de entrenamiento para las diferentes variantes del modelo DistilBERT fine-tuned a HS04.
-- **Notebooks (`*.ipynb`)**: guían todo el flujo de trabajo, desde el EDA (`HSrecomm_EDA.ipynb`) hasta el entrenamiento, evaluación de errores y experimentos de transferencia.
+## Informe de tesis
 
-## Dataset
+La versión más reciente incluida en el repositorio es [Tesis_tedoldi_p1.pdf](docs/tesis/Tesis_tedoldi_p1.pdf), fechada el **10 de julio de 2026**. El documento describe el contexto, marco teórico, diseño experimental, resultados, análisis del error, limitaciones y líneas futuras.
 
-El corpus principal está compuesto por ~500k tuplas `(GOODS_DESCRIPTION, HS06)`. A partir de este insumo se derivan los códigos HS02 y HS04, y se incorporan descripciones oficiales de la nomenclatura HS06 para análisis de similitud y enriquecimiento semántico.
+## Problema y datos
 
-Durante el EDA se generaron variables agregadas (longitud, indicadores de sub-tokenización) que permiten caracterizar la calidad de las descripciones y cuantificar el desbalance extremo entre códigos.
+El caso de estudio utiliza aproximadamente 500 mil pares `(GOODS_DESCRIPTION, HS06)` en inglés provenientes del proyecto BACUDA de la Organización Mundial de Aduanas. A partir de HS06 se deriva la etiqueta HS04.
 
-## Metodología de trabajo
+La tarea tiene las siguientes características:
 
-1. **Profiling y EDA**: depuración básica, análisis de frecuencias por nivel HS, ingeniería de variables de longitud y tokenización, y evaluación de similitud entre descripciones comerciales y nomenclaturas oficiales mediante DistilBERT pre-entrenado.
-2. **Representaciones**: generación de *embeddings* con `distilbert-base-uncased` y reducción de dimensionalidad (PCA, t-SNE, UMAP) para identificar clústeres temáticos y evaluar la separación de clases.
-3. **Arquitectura encoder-classifier**: se construyó una clase PyTorch que combina el encoder DistilBERT y un clasificador feed-forward adaptable al número de clases objetivo. Se exploraron tres configuraciones: transfer learning congelando el encoder, fine-tuning parcial (capas superiores) y fine-tuning total.
-4. **Evaluación**: se reportaron métricas *Top-N accuracy* en el set de validación, alcanzando un 63.9 % Top-1 y 82.3 % Top-5 con el modelo ajustado de extremo a extremo.
-5. **Visualización post-ajuste**: comparación entre embeddings originales y fine-tuned para observar mejoras en la separabilidad de capítulos HS a través de proyecciones 2D/3D.
-6. **Error Analysis preliminar**: revisión cualitativa de predicciones con baja confianza y casos representativos para motivar el desarrollo de un metamodelo de calidad.
+- clasificación multiclase sobre **1.133 partidas HS04** observadas;
+- fuerte desbalance entre clases;
+- descripciones breves, heterogéneas, ruidosas y a menudo ambiguas;
+- evaluación mediante accuracy acumulada Top-1 a Top-5, coherente con un sistema recomendador.
 
-## Configuración del entorno
+Los datos crudos no se versionan en Git. Los notebooks esperan archivos bajo `data/`; es necesario obtenerlos por la vía autorizada y respetar las rutas indicadas en cada cuaderno.
 
-1. Crear un entorno virtual (Python 3.10+ recomendado) e instalar dependencias:
+## Metodología
+
+1. **EDA y representación:** perfilado del corpus, análisis del desbalance y de la tokenización, embeddings contextuales y proyecciones PCA/t-SNE.
+2. **Baselines:** Doc2Vec y FastText sobre texto crudo (`RAW`), texto normalizado (`PREPRO`) y texto normalizado con n-gramas (`PREPRO+NGRAM`). Los resultados se estiman sobre 10 iteraciones.
+3. **DistilBERT:** comparación entre encoder fijo (`FE`), fine-tuning parcial de dos capas (`PFT`) y fine-tuning completo (`FFT`/`FFT11`). Los experimentos iterativos se ejecutaron en Vertex AI con GPU NVIDIA L4.
+4. **Análisis del error:** agregación por HS04, variables estructurales y diagnósticas, modelos explicativos y análisis SHAP.
+5. **Uso y extensiones:** inferencia por lote, scoring de confianza y evaluación exploratoria de un esquema DistilBERT + LLM.
+
+## Resultados principales
+
+Promedios de los experimentos iterativos versionados en `results/iterative_analysis/`:
+
+| Modelo | Variante | Top-1 | Top-2 | Top-3 | Top-4 | Top-5 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Doc2Vec | PREPRO+NGRAM | 60,84 % | 68,48 % | 71,49 % | 73,15 % | 74,31 % |
+| FastText | PREPRO | 57,66 % | 70,56 % | 76,37 % | 79,80 % | 82,05 % |
+| DistilBERT | FFT11 | **66,37 %** | **75,53 %** | **79,76 %** | **82,22 %** | **83,88 %** |
+
+El entrenamiento final FFT, con semilla 32 y validación del 1 %, obtuvo **66,72 % Top-1** y **83,83 % Top-5**. Sus métricas y configuración están en `results/distilbert/fft_final/`.
+
+El análisis concluye que:
+
+- DistilBERT con fine-tuning completo es la alternativa más efectiva y estable;
+- el preprocesamiento no afecta por igual a todas las familias: Doc2Vec se beneficia de n-gramas y FastText del texto normalizado;
+- las variables estructurales explican poco del rendimiento por clase (`R² = 0,043`), mientras que las señales de probabilidad e incertidumbre elevan el poder explicativo (`R² = 0,326`);
+- el desempeño no es homogéneo entre partidas y existen errores de alta confianza, por lo que las probabilidades no deben interpretarse como certeza ni usarse sin controles.
+
+La prueba con un LLM se conserva como exploración sobre una muestra pequeña (267 casos); no mejora el Top-1 del modelo final y no constituye el resultado principal de la tesis.
+
+## Estructura del repositorio
+
+```text
+.
+├── 00-HSrecomm_EDA.ipynb
+├── 01-HSrecomm_Baselines_HS04_*.ipynb
+├── 02-HSrecomm_DistiltBERT_HS04_train.ipynb
+├── 03-HSrecomm_DistiltBERT_HS04_viz.ipynb
+├── 04-HSrecomm_iter_results_analysis.ipynb
+├── 05-HSrecomm_DistiltBERT_HS04_test&use.ipynb
+├── 06-HSrecomm_DistiltBERT_HS04_error.ipynb
+├── 07-HSrecomm_DistiltBERT_HS04_scoring.ipynb
+├── 10-HSrecomm_Sampling_val.ipynb
+├── 11-HSrecomm_DistiltBERT_HS04_genai.ipynb
+├── data/                       # datos locales; ignorados por Git
+├── deployment/                 # prototipos históricos de inferencia
+├── docs/                       # tesis, diseños experimentales y bibliografía
+├── eda/                        # perfiles y visualizaciones exploratorias
+├── gcp/                        # entrenamiento en Vertex AI y configuración de jobs
+├── results/                    # métricas, logs, figuras y predicciones versionadas
+├── doc2vec_utils.py
+├── fasttext_utils.py
+└── hs04_distilbert_inference.py
+```
+
+`0-old/`, `models/`, `data/`, los entornos virtuales y los pesos binarios se excluyen mediante `.gitignore`.
+
+## Instalación
+
+Se recomienda Python 3.10–3.12. Algunas librerías científicas o de GPU pueden no disponer todavía de ruedas para versiones más nuevas.
 
 ### Windows PowerShell
 
-   ```powershell
-   py -3.12 -m venv venv
-   .\venv\Scripts\Activate.ps1
-   pip3 install -r requirements.txt
-   ```
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 ### Linux o WSL
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-   > Para GPU NVIDIA es necesario instalar PyTorch desde el índice oficial de CUDA 12.1 (ver comentarios en `requirements.txt`).
+La instalación estándar de `torch` desde PyPI es suficiente para CPU. Para usar una GPU NVIDIA, instale primero la distribución de PyTorch compatible con la versión de CUDA del equipo siguiendo la documentación oficial y luego ejecute `pip install -r requirements.txt`.
 
-2. Descargar o ubicar los conjuntos de datos en `data/`. Los notebooks asumen rutas relativas y utilizan las particiones predefinidas en `train_data/` y `test_data/`.
+Los jobs de Vertex AI utilizan un entorno más acotado, definido por separado en `gcp/requirements.txt` y la imagen base indicada en `gcp/Dockerfile`.
 
-3. Lanzar Jupyter Lab/Notebook para ejecutar los cuadernos en el orden sugerido: EDA → entrenamiento → evaluación → despliegue.
+## Flujo sugerido
 
-## Resultados actuales
+Para reproducir el recorrido completo, abra Jupyter Lab y ejecute los cuadernos según el prefijo numérico:
 
-- **Top-N accuracy (HS04)**
+```powershell
+jupyter lab
+```
 
-  | Configuración | Top-1 | Top-3 | Top-5 |
-  | ------------- | ----- | ----- | ----- |
-  | Transfer learning (encoder congelado) | 50.5 % | 66.1 % | 72.2 % |
-  | Fine-tuning 2 capas superiores | 63.3 % | 77.2 % | 81.7 % |
-  | Fine-tuning total | **63.9 %** | **77.9 %** | **82.3 %** |
+- `00`: exploración y visualización;
+- `01`: baselines e iteraciones;
+- `02`–`03`: entrenamiento y visualización de DistilBERT;
+- `04`: comparación de experimentos iterativos;
+- `05`: prueba e inferencia;
+- `06`: análisis del error;
+- `07`: scoring de confianza;
+- `10`: auditoría del muestreo;
+- `11`: evaluación exploratoria con GenAI.
 
-- **Insights clave**: las descripciones de vehículos (HS02 87) forman clústeres claros, mientras que categorías químicas y textiles requieren modelos más expresivos o datos adicionales. La similitud promedio entre descripciones comerciales y nomenclaturas oficiales ronda 0.84, lo que respalda la eficacia del enfoque basado en embeddings contextuales.
+Los notebooks contienen resultados persistidos, pero varios entrenamientos requieren datos locales y hardware acelerado. Las credenciales de Google Cloud y OpenAI solo son necesarias para los cuadernos que consumen esos servicios; no deben guardarse en el repositorio.
 
-## Ruta hacia la tesis de maestría
+## Inferencia con el modelo final
 
-### Extensiones inmediatas
+La interfaz reusable se encuentra en `hs04_distilbert_inference.py`:
 
-- Implementar **modelos baselines** (Doc2Vec, FastText) para cuantificar el valor agregado del fine-tuning de DistilBERT y documentar la comparativa de desempeño y costo computacional.
-- Analizar la **entropía y dispersión** de las probabilidades de salida del clasificador para caracterizar la confianza del modelo y detectar predicciones ambiguas.
+```python
+from hs04_distilbert_inference import HS04DistilBERTPredictor
 
-### Líneas de investigación futura
+predictor = HS04DistilBERTPredictor()
+result = predictor.predict("air cleaner filter assembly for diesel engine", top_k=5)
+print(result["predictions"])
+```
 
-- Profundizar en el **análisis de errores**: estudiar sistemáticamente los casos donde el modelo falla (por capítulo, longitud de texto, similitud semántica) e identificar patrones que guíen mejoras de datos o arquitectura.
-- Entrenar un **metamodelo de control de calidad** que, a partir de las probabilidades, la longitud del texto y medidas de similitud, determine cuándo una predicción es confiable o debe escalarse a revisión humana.
-- Evaluar modelos pre-entrenados en **español** y ampliar el dataset con descripciones multilingües para soportar escenarios reales en Argentina (NCM/SIM).
-- Explorar soluciones **híbridas ML + LLMs**, donde un LLM actúe como verificador o generador de explicaciones, integrando interpretabilidad y asistencia interactiva.
-- Escalar la investigación a niveles HS06 y regionales, incluyendo estrategias de **transfer learning extendido** (más epochs, curriculum learning) y técnicas de manejo de desbalance extremo.
+Para ejecutar este ejemplo debe existir el archivo no versionado:
 
-## Cómo contribuir
+```text
+results/distilbert/fft_final/final_model/pytorch_model.bin
+```
 
-1. Registrar los experimentos (hiperparámetros, semillas y métricas) en los cuadernos o en archivos bajo `results/`.
-2. Incluir referencias bibliográficas y fuentes externas en `docs/` para mantener el contexto académico del proyecto.
-3. Documentar scripts y notebooks con celdas explicativas orientadas a lectores futuros de la tesis.
+La configuración y el diccionario de etiquetas sí están versionados. El tokenizador y el encoder base `distilbert-base-uncased` se descargan desde Hugging Face en el primer uso, salvo que ya estén disponibles en caché.
 
-## Referencias
+## Artefactos relevantes
 
-La bibliografía principal se encuentra listada en el documento del trabajo de especialización e incluye investigaciones sobre clasificación arancelaria, técnicas de embeddings y modelos *transformer*. Para citas completas, consultar el apartado "Bibliografía" dentro de la documentación del proyecto.
+- `results/iterative_analysis/`: resúmenes comparativos de baselines y DistilBERT.
+- `results/distilbert/fft_final/final_metrics.json`: métricas del entrenamiento final.
+- `results/distilbert/fft_final/final_val_predictions.csv`: predicciones de validación.
+- `docs/tesis/baselines_experimental_design.md`: diseño de baselines.
+- `docs/tesis/distilbert_experimental_design.md`: diseño de DistilBERT.
+- `docs/tesis/distilbert_scoring_analysis.md`: análisis del scoring.
+- `docs/tesis/iterative_training_experiments_report.md`: reporte de experimentos iterativos.
+
+## Limitaciones y trabajo futuro
+
+El estudio se limita a datos en inglés, una fuente no identificada por país y etiquetas HS04. Antes de cualquier uso operativo se requiere validación externa, calibración, monitoreo y revisión normativa. Las líneas futuras incluyen HS06/NCM/SIM, textos normativos y notas explicativas, escenarios multilingües, recuperación semántica y RAG, re-ranking experto, explicabilidad interna del Transformer y validación productiva del scoring.
 
 ---
 
-> Última actualización: septiembre de 2025. Este repositorio continuará evolucionando conforme se iteren las etapas de la tesis de maestría.
+Última actualización de la documentación: **agosto de 2026**.
